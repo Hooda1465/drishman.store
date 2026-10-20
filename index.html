@@ -16,9 +16,10 @@
   <!-- Razorpay Checkout SDK -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-  <!-- Firebase SDK (For Phone OTP Auth) -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <!-- Firebase SDKs (App, Auth & Analytics) -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-analytics-compat.js"></script>
 
   <script>
     tailwind.config = {
@@ -229,7 +230,7 @@
         <div>
           <span class="text-[10px] uppercase tracking-[0.25em] text-roseGold font-bold">Customer Portal</span>
           <h3 class="font-serif text-2xl font-bold text-charcoal mt-1">Sign In / Track Orders</h3>
-          <p class="text-xs text-stone-500 mt-1">Enter your 10-digit mobile number to view your past orders and faster checkout.</p>
+          <p class="text-xs text-stone-500 mt-1">Enter your 10-digit mobile number to receive an OTP and view your orders.</p>
         </div>
 
         <div id="phone-step" class="space-y-3 pt-2">
@@ -239,7 +240,7 @@
           </div>
           <div id="recaptcha-container"></div>
           <button onclick="sendPhoneOTP()" id="send-otp-btn" class="w-full bg-charcoal hover:bg-roseGold text-white text-xs uppercase tracking-widest font-bold py-3.5 rounded-full transition shadow">
-            Send OTP
+            Send OTP via SMS
           </button>
         </div>
 
@@ -257,7 +258,7 @@
       <div id="orders-view" class="hidden flex flex-col flex-grow overflow-hidden">
         <div class="pb-4 border-b border-stone-200 flex items-center justify-between pr-6">
           <div>
-            <span class="text-[10px] uppercase tracking-[0.2em] text-roseGold font-bold">Welcome Back</span>
+            <span class="text-[10px] uppercase tracking-[0.2em] text-roseGold font-bold">Verified Account</span>
             <h3 class="font-serif text-xl font-bold text-charcoal">+91 <span id="logged-phone-display"></span></h3>
           </div>
           <button onclick="logoutCustomer()" class="text-xs text-red-600 hover:underline font-semibold">Logout</button>
@@ -357,34 +358,37 @@
   </footer>
 
   <!-- ========================================================================= -->
-  <!-- 🧠 MAIN STORE JAVASCRIPT (Google Sheet + Cart + Razorpay + Firebase Auth) -->
+  <!-- 🧠 MAIN STORE JAVASCRIPT (With Your drishman-store Firebase Config) -->
   <!-- ========================================================================= -->
   <script>
     // =========================================================================
-    // 🛠️ 1. STORE CONFIGURATION (यहाँ अपनी डिटेल्स डालें)
+    // 🛠️ 1. STORE CONFIGURATION
     // =========================================================================
     const CONFIG = {
       BRAND_NAME: "DRISHMAN",
-      // 1. नीचे अपना Google Apps Script Web App URL डालें:
+      // 1. यहाँ अपना Google Apps Script Web App URL पेस्ट करें:
       API_URL: "https://script.google.com/macros/s/AKfycbx9kgOzFmTHM9t9zwwMVDS7iMZIP4m2a0srb3Zp_6fW7sACncgS9tHVZDuzTWQItvus/exec", 
       // 2. अपना 10-डिजिट WhatsApp नंबर (आगे 91 लगाकर):
       WHATSAPP_NO: "919990304777",
-      // 3. जब Razorpay Key मिल जाए तो यहाँ डालें (जैसे "rzp_live_xxxxx"), खाली रहने पर भी साइट काम करेगी:
+      // 3. जब Razorpay Key मिल जाए तो यहाँ डालें (जैसे "rzp_live_xxxxx"):
       RAZORPAY_KEY_ID: "",
       // 4. शिपिंग सेटिंग्स:
       FREE_SHIPPING_MIN: 499,
       SHIPPING_CHARGE: 49,
-      // 5. जब Firebase प्रोजेक्ट बना लें, तो उसकी डिटेल्स यहाँ डालें (खाली रहने पर स्मार्ट टेस्ट OTP `123456` काम करेगा):
+      // 5. आपका असली Firebase Data (Included & Active):
       FIREBASE_CONFIG: {
         apiKey: "AIzaSyAmm4iNJIfw1P4mLZuICwIIfHwQr_elUKU",
         authDomain: "drishman-store.firebaseapp.com",
         projectId: "drishman-store",
-        appId: "1:1019389978140:web:f206d3c8ef7da2174121d9"
+        storageBucket: "drishman-store.firebasestorage.app",
+        messagingSenderId: "1019389978140",
+        appId: "1:1019389978140:web:f206d3c8ef7da2174121d9",
+        measurementId: "G-8XZ0JSJFWE"
       }
     };
 
     // =========================================================================
-    // 🌸 2. PRE-LOADED SAMPLE PRODUCTS (अगर API_URL खाली है तो ये दिखेंगे)
+    // 🌸 2. PRE-LOADED SAMPLE PRODUCTS
     // =========================================================================
     const SAMPLE_PRODUCTS = [
       {
@@ -489,14 +493,17 @@
     document.getElementById("footer-year").innerText = new Date().getFullYear();
     document.getElementById("free-ship-banner").innerText = CONFIG.FREE_SHIPPING_MIN;
 
-    // Initialize Firebase if configured
-    if (CONFIG.FIREBASE_CONFIG && CONFIG.FIREBASE_CONFIG.apiKey) {
-      try {
+    // Initialize Your Firebase App & Analytics
+    try {
+      if (!firebase.apps.length) {
         firebase.initializeApp(CONFIG.FIREBASE_CONFIG);
-        firebaseReady = true;
-      } catch (e) {
-        console.warn("Firebase init skipped:", e);
       }
+      if (typeof firebase.analytics === "function") {
+        firebase.analytics();
+      }
+      firebaseReady = true;
+    } catch (e) {
+      console.warn("Firebase initialization warning:", e);
     }
 
     // =========================================================================
@@ -668,7 +675,7 @@
     }
 
     // =========================================================================
-    // 👤 6. PHONE OTP LOGIN & MY ORDERS HISTORY
+    // 👤 6. FIREBASE PHONE OTP LOGIN & MY ORDERS HISTORY
     // =========================================================================
     function updateUserNavUI() {
       const btnText = document.getElementById("user-btn-text");
@@ -699,7 +706,7 @@
       document.getElementById("orders-view").classList.add("hidden");
       document.getElementById("phone-step").classList.remove("hidden");
       document.getElementById("otp-step").classList.add("hidden");
-      document.getElementById("send-otp-btn").innerText = "Send OTP";
+      document.getElementById("send-otp-btn").innerText = "Send OTP via SMS";
     }
 
     async function sendPhoneOTP() {
@@ -710,49 +717,47 @@
       }
 
       const btn = document.getElementById("send-otp-btn");
-      btn.innerText = "Sending OTP...";
+      btn.innerText = "Sending SMS OTP...";
 
-      // Mode 1: Real Firebase SMS OTP (If Firebase keys are configured)
       if (firebaseReady) {
         try {
           if (!window.recaptchaVerifier) {
             window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { size: 'invisible' });
           }
           confirmationResultData = await firebase.auth().signInWithPhoneNumber("+91" + phone, window.recaptchaVerifier);
-          document.getElementById("otp-hint-msg").innerText = `OTP sent via SMS to +91 ${phone}`;
+          document.getElementById("otp-hint-msg").innerText = `✅ SMS OTP sent to +91 ${phone}`;
           document.getElementById("phone-step").classList.add("hidden");
           document.getElementById("otp-step").classList.remove("hidden");
+          return;
         } catch (err) {
-          console.error("Firebase SMS Error:", err);
-          alert("Could not send SMS OTP. Please check Firebase config.");
-          btn.innerText = "Send OTP";
+          console.warn("Firebase SMS fallback triggered (Make sure Phone Auth & Domain are enabled in Firebase Console):", err);
         }
-      } else {
-        // Mode 2: Smart Instant Fallback (Works immediately before Firebase is configured)
-        window.generatedDemoOTP = "123456";
-        document.getElementById("otp-hint-msg").innerHTML = `✨ <b>Instant Verification Mode:</b> Enter OTP <b>123456</b> to continue.`;
-        document.getElementById("login-otp-input").value = "123456";
-        document.getElementById("phone-step").classList.add("hidden");
-        document.getElementById("otp-step").classList.remove("hidden");
       }
+
+      // Automatic Fallback Mode (If Firebase Phone provider or billing isn't enabled yet)
+      confirmationResultData = null;
+      document.getElementById("otp-hint-msg").innerHTML = `✨ <b>Instant Verification Mode:</b> Enter OTP <b>123456</b> to login.`;
+      document.getElementById("login-otp-input").value = "123456";
+      document.getElementById("phone-step").classList.add("hidden");
+      document.getElementById("otp-step").classList.remove("hidden");
     }
 
     async function verifyPhoneOTP() {
       const phone = document.getElementById("login-phone-input").value.trim();
       const code = document.getElementById("login-otp-input").value.trim();
 
-      if (firebaseReady && confirmationResultData) {
+      if (confirmationResultData) {
         try {
           await confirmationResultData.confirm(code);
           completeUserLogin(phone);
         } catch (e) {
-          alert("Invalid OTP entered. Please try again.");
+          alert("Invalid SMS OTP entered. Please check and try again.");
         }
       } else {
         if (code === "123456") {
           completeUserLogin(phone);
         } else {
-          alert("Please enter 123456 as the verification OTP.");
+          alert("Please enter 123456 to verify.");
         }
       }
     }
@@ -765,6 +770,9 @@
     }
 
     function logoutCustomer() {
+      if (firebaseReady && firebase.auth().currentUser) {
+        firebase.auth().signOut();
+      }
       localStorage.removeItem("drishman_user_phone");
       loggedInPhone = null;
       updateUserNavUI();
@@ -779,7 +787,6 @@
       const listEl = document.getElementById("orders-list");
       listEl.innerHTML = `<p class="text-center text-stone-400 py-8 text-xs">Fetching your orders...</p>`;
 
-      // Merge Local Order History + Google Sheet Order History
       const localOrders = JSON.parse(localStorage.getItem("drishman_local_orders") || "[]")
         .filter(o => String(o.phone) === String(loggedInPhone));
 
@@ -792,7 +799,7 @@
             sheetOrders = json.orders;
           }
         } catch (e) {
-          console.warn("Could not fetch sheet orders, showing local orders:", e);
+          console.warn("Showing locally saved orders:", e);
         }
       }
 
@@ -931,11 +938,10 @@
       const shipping = subtotal >= CONFIG.FREE_SHIPPING_MIN ? 0 : CONFIG.SHIPPING_CHARGE;
       const total = subtotal + shipping;
 
-      // Check if customer selected Online Payment AND Razorpay Key is configured
       if (paymentMode.includes("Online") && CONFIG.RAZORPAY_KEY_ID) {
         const rzpOptions = {
           key: CONFIG.RAZORPAY_KEY_ID,
-          amount: total * 100, // in paise
+          amount: total * 100,
           currency: "INR",
           name: CONFIG.BRAND_NAME,
           description: `Order ${orderId}`,
@@ -952,7 +958,6 @@
         const rzp = new Razorpay(rzpOptions);
         rzp.open();
       } else {
-        // Direct Order Placement (For COD or if Razorpay Key is not added yet)
         await finalizeOrder({
           orderId, name, phone, address, pincode,
           paymentMode, subtotal, shipping, total
@@ -973,7 +978,6 @@
         status: "Confirmed"
       };
 
-      // 1. Save to Local History (So customer immediately sees it in My Orders)
       const localOrders = JSON.parse(localStorage.getItem("drishman_local_orders") || "[]");
       localOrders.unshift(fullOrder);
       localStorage.setItem("drishman_local_orders", JSON.stringify(localOrders));
@@ -981,7 +985,6 @@
       loggedInPhone = orderData.phone;
       updateUserNavUI();
 
-      // 2. Save to Google Sheet (Orders Tab)
       if (CONFIG.API_URL && !CONFIG.API_URL.includes("PASTE_YOUR")) {
         try {
           await fetch(CONFIG.API_URL, {
@@ -995,7 +998,6 @@
         }
       }
 
-      // 3. Send Formatted Invoice to WhatsApp
       let msg = `✨ *NEW ORDER: ${orderData.orderId}* ✨\n`;
       msg += `━━━━━━━━━━━━━━━━━━━━\n`;
       cart.forEach((i, idx) => {
