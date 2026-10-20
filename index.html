@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DRISHMAN & YOSUKA | Luxury Hair Accessories</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['"Playfair Display"', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            cream: '#FAF7F5',
+            blush: '#F4EBE8',
+            roseGold: '#B76E79',
+            roseDark: '#96525C',
+            charcoal: '#18181B',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+  </style>
+</head>
+<body class="bg-cream text-charcoal font-sans antialiased selection:bg-roseGold selection:text-white flex flex-col min-h-screen">
+
+  <!-- 1. Top Luxury Announcement Bar -->
+  <div class="bg-charcoal text-cream text-[11px] md:text-xs tracking-[0.18em] uppercase py-2.5 px-4 text-center font-medium">
+    ✨ Complimentary Free Shipping on Orders Above ₹<span id="free-ship-banner">499</span> &nbsp;|&nbsp; Handcrafted Luxury Hair Essentials ✨
+  </div>
+
+  <!-- 2. Glassmorphism Sticky Navbar -->
+  <header class="bg-cream/90 backdrop-blur-md sticky top-0 z-30 border-b border-stone-200/80 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <a href="#" class="flex flex-col">
+        <span id="brand-title" class="font-serif text-2xl md:text-3xl font-bold tracking-wider text-charcoal">DRISHMAN</span>
+        <span class="text-[9px] tracking-[0.3em] uppercase text-roseGold font-semibold -mt-1">By Drishman Enterprises</span>
+      </a>
+
+      <!-- Search Input (Desktop & Mobile) -->
+      <div class="hidden md:flex items-center w-96 relative">
+        <input 
+          type="text" 
+          id="search-input" 
+          oninput="applyFilters()" 
+          placeholder="Search satin scrunchies, korean claw clips, SKU..." 
+          class="w-full pl-10 pr-4 py-2.5 text-xs bg-white border border-stone-200 focus:border-roseGold rounded-full outline-none transition shadow-sm"
+        />
+        <svg class="w-4 h-4 text-stone-400 absolute left-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      </div>
+
+      <!-- Right Actions -->
+      <div class="flex items-center gap-3">
+        <a href="#catalog" class="hidden sm:inline-block text-xs uppercase tracking-widest font-semibold text-stone-600 hover:text-roseGold transition mr-2">Collection</a>
+        <button onclick="toggleCart(true)" class="relative bg-charcoal hover:bg-roseGold text-white px-5 py-2.5 rounded-full text-xs uppercase tracking-widest font-semibold flex items-center gap-2.5 transition duration-300 shadow-sm">
+          <span>Bag</span>
+          <span id="cart-badge" class="bg-roseGold text-white px-2 py-0.5 rounded-full text-[11px] font-bold">0</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Search Bar -->
+    <div class="md:hidden px-4 pb-3">
+      <div class="relative">
+        <input 
+          type="text" 
+          id="search-input-mobile" 
+          oninput="document.getElementById('search-input').value = this.value; applyFilters();" 
+          placeholder="Search hair accessories or SKU..." 
+          class="w-full pl-9 pr-4 py-2 text-xs bg-white border border-stone-200 focus:border-roseGold rounded-full outline-none"
+        />
+        <svg class="w-4 h-4 text-stone-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      </div>
+    </div>
+  </header>
+
+  <!-- 3. High-End Editorial Hero Section -->
+  <section class="relative overflow-hidden bg-blush border-b border-stone-200/60">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16 grid md:grid-cols-12 gap-8 items-center">
+      <div class="md:col-span-7 space-y-5 text-center md:text-left">
+        <span class="inline-block text-[11px] tracking-[0.25em] uppercase font-bold text-roseDark bg-white/80 px-3.5 py-1.5 rounded-full border border-roseGold/20">
+          New Season Edit • 2026 Collection
+        </span>
+        <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold text-charcoal leading-[1.15]">
+          Effortless Elegance for <span class="italic font-normal text-roseGold">Every Strand.</span>
+        </h1>
+        <p class="text-stone-600 text-sm md:text-base max-w-xl mx-auto md:mx-0 leading-relaxed">
+          Discover ultra-soft Mulberry satin scrunchies, unbreakable Korean matte claw clips, and artisanal bridal hair pieces designed for zero hair breakage.
+        </p>
+        <div class="pt-2 flex flex-wrap gap-3 justify-center md:justify-start">
+          <a href="#catalog" class="bg-charcoal hover:bg-roseGold text-white text-xs uppercase tracking-[0.2em] font-semibold px-8 py-4 rounded-full transition duration-300 shadow-md">
+            Explore Collection
+          </a>
+          <button onclick="selectCategory('Combo Packs'); document.getElementById('catalog').scrollIntoView();" class="bg-white hover:bg-stone-100 text-charcoal border border-stone-300 text-xs uppercase tracking-[0.2em] font-semibold px-7 py-4 rounded-full transition">
+            View Bestseller Combos
+          </button>
+        </div>
+      </div>
+
+      <!-- Hero Visual Collage -->
+      <div class="md:col-span-5 grid grid-cols-2 gap-3 sm:gap-4">
+        <div class="space-y-3 sm:space-y-4">
+          <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80" alt="Luxury Hair Styling" class="w-full h-48 sm:h-60 object-cover rounded-2xl shadow-md" />
+          <div class="bg-white p-4 rounded-2xl shadow-sm border border-stone-100 text-center">
+            <p class="font-serif text-lg font-bold text-roseGold">100% Hair Safe</p>
+            <p class="text-[11px] text-stone-500">Anti-Breakage Grip & Satin</p>
+          </div>
+        </div>
+        <div class="space-y-3 sm:space-y-4 pt-6">
+          <div class="bg-charcoal text-cream p-4 rounded-2xl shadow-sm text-center">
+            <p class="font-serif text-lg font-bold">Direct Price</p>
+            <p class="text-[11px] text-stone-300">Up to 60% Off MRP</p>
+          </div>
+          <img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=600&q=80" alt="Beauty Accessories" class="w-full h-48 sm:h-60 object-cover rounded-2xl shadow-md" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Luxury Value Strip -->
+  <section class="bg-white border-b border-stone-200/70">
+    <div class="max-w-7xl mx-auto px-4 py-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-xs">
+      <div class="flex items-center justify-center gap-2 text-stone-700 font-medium"><span>🎀</span> <span>Zero-Crease Satin Fabric</span></div>
+      <div class="flex items-center justify-center gap-2 text-stone-700 font-medium"><span>✨</span> <span>High-Tension Korean Springs</span></div>
+      <div class="flex items-center justify-center gap-2 text-stone-700 font-medium"><span>🚚</span> <span>Fast Pan-India Dispatch</span></div>
+      <div class="flex items-center justify-center gap-2 text-stone-700 font-medium"><span>💬</span> <span>Instant WhatsApp Support</span></div>
+    </div>
+  </section>
+
+  <!-- 5. Main Product Catalog -->
+  <main id="catalog" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow w-full">
+    
+    <!-- Section Title & Category Filter Pills -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+      <div>
+        <span class="text-[11px] uppercase tracking-[0.25em] text-roseGold font-bold">Curated Catalogue</span>
+        <h2 class="font-serif text-3xl md:text-4xl font-semibold text-charcoal mt-1">Signature Hair Pieces</h2>
+      </div>
+      <div id="category-bar" class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+        <!-- Categories injected via JS -->
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="hidden text-center py-16 bg-white rounded-3xl border border-stone-200/60">
+      <p class="font-serif text-2xl text-stone-700">No matching pieces found</p>
+      <p class="text-xs text-stone-400 mt-1">Try searching for another category or SKU code.</p>
+      <button onclick="resetFilters()" class="mt-4 bg-charcoal text-white text-xs uppercase tracking-widest px-6 py-2.5 rounded-full">Show All Items</button>
+    </div>
+
+    <!-- Product Grid -->
+    <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8"></div>
+  </main>
+
+  <!-- 6. Product Quick-View Modal (Multi-Image Gallery) -->
+  <div id="product-modal" class="fixed inset-0 bg-black/60 backdrop-blur-xs hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl relative grid md:grid-cols-2 max-h-[92vh]">
+      <button onclick="closeProductModal()" class="absolute top-4 right-4 bg-white/90 hover:bg-charcoal hover:text-white text-charcoal w-9 h-9 rounded-full font-bold text-lg shadow-md z-10 transition">&times;</button>
+      
+      <!-- Left: Image Gallery -->
+      <div class="bg-stone-100 p-4 flex flex-col justify-between">
+        <img id="modal-main-img" src="" alt="" class="w-full h-72 md:h-96 object-cover rounded-2xl bg-white shadow-xs" />
+        <div id="modal-thumbnails" class="flex gap-2.5 mt-3 overflow-x-auto no-scrollbar py-1"></div>
+      </div>
+
+      <!-- Right: Product Details -->
+      <div class="p-6 md:p-8 flex flex-col justify-between overflow-y-auto">
+        <div>
+          <div class="flex items-center justify-between">
+            <span id="modal-category" class="text-[10px] font-bold uppercase tracking-[0.2em] text-roseDark bg-blush px-3 py-1 rounded-full"></span>
+            <span id="modal-sku" class="text-xs text-stone-400 font-mono"></span>
+          </div>
+          <h2 id="modal-title" class="font-serif text-2xl font-semibold text-charcoal mt-3 leading-snug"></h2>
+          
+          <div class="flex items-baseline gap-3 mt-4 pb-4 border-b border-stone-200">
+            <span id="modal-price" class="text-2xl font-bold text-charcoal"></span>
+            <span id="modal-mrp" class="text-sm text-stone-400 line-through"></span>
+            <span id="modal-discount" class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full"></span>
+          </div>
+
+          <p id="modal-desc" class="text-xs md:text-sm text-stone-600 mt-4 leading-relaxed whitespace-pre-line"></p>
+
+          <div class="mt-6 space-y-2 text-xs text-stone-500 bg-cream p-3.5 rounded-2xl border border-stone-200/60">
+            <p>✓ <b>Premium Quality:</b> Tested for strong grip & durability</p>
+            <p>✓ <b>Hair Friendly:</b> Smooth edges prevent pulling or snagging</p>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-stone-100">
+          <button id="modal-add-btn" class="w-full bg-charcoal hover:bg-roseGold text-white text-xs uppercase tracking-[0.2em] font-bold py-4 rounded-full transition duration-300 shadow-md">
+            + Add to Shopping Bag
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Slide-Over Shopping Bag & Checkout Drawer -->
+  <div id="cart-drawer" class="fixed inset-0 bg-black/50 backdrop-blur-xs hidden z-50 flex justify-end">
+    <div class="bg-white w-full max-w-md h-full flex flex-col justify-between shadow-2xl">
+      
+      <!-- Drawer Header -->
+      <div class="px-6 py-5 border-b border-stone-200 flex justify-between items-center bg-cream">
+        <div>
+          <h2 class="font-serif text-xl font-bold text-charcoal">Your Shopping Bag</h2>
+          <p class="text-[11px] text-stone-500">Direct WhatsApp & Sheet Order Sync</p>
+        </div>
+        <button onclick="toggleCart(false)" class="w-8 h-8 rounded-full bg-white border border-stone-200 text-stone-600 hover:text-charcoal text-xl leading-none flex items-center justify-center">&times;</button>
+      </div>
+
+      <!-- Free Shipping Progress Bar -->
+      <div class="bg-blush/70 px-6 py-3 border-b border-stone-200/70">
+        <p id="shipping-msg" class="text-xs font-medium text-charcoal mb-1.5"></p>
+        <div class="w-full bg-white h-1.5 rounded-full overflow-hidden border border-stone-200">
+          <div id="shipping-bar" class="bg-roseGold h-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Cart Items + Customer Address Form -->
+      <div class="p-6 overflow-y-auto flex-grow space-y-6">
+        <div id="cart-items-list" class="space-y-3"></div>
+
+        <!-- Checkout Address Form -->
+        <form id="checkout-form" class="space-y-3.5 border-t border-stone-200 pt-5 hidden" onsubmit="submitOrder(event)">
+          <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-roseDark">📍 Delivery Information</h3>
+          
+          <input type="text" id="cust-name" required placeholder="Full Name *" class="w-full px-3.5 py-2.5 text-xs bg-cream border border-stone-200 focus:border-roseGold focus:bg-white rounded-xl outline-none" />
+          <input type="tel" id="cust-phone" required pattern="[0-9]{10}" placeholder="10-Digit WhatsApp Mobile Number *" class="w-full px-3.5 py-2.5 text-xs bg-cream border border-stone-200 focus:border-roseGold focus:bg-white rounded-xl outline-none" />
+          <textarea id="cust-address" required rows="2" placeholder="House No, Building, Street, Area, Landmark *" class="w-full px-3.5 py-2.5 text-xs bg-cream border border-stone-200 focus:border-roseGold focus:bg-white rounded-xl outline-none"></textarea>
+          
+          <div class="grid grid-cols-2 gap-2.5">
+            <input type="text" id="cust-pincode" required pattern="[0-9]{6}" placeholder="6-Digit Pincode *" class="w-full px-3.5 py-2.5 text-xs bg-cream border border-stone-200 focus:border-roseGold focus:bg-white rounded-xl outline-none" />
+            <select id="cust-payment" class="w-full px-3 py-2.5 text-xs bg-cream border border-stone-200 focus:border-roseGold rounded-xl outline-none font-medium">
+              <option value="UPI / QR Code (0% Fee)">UPI / QR Code</option>
+              <option value="Cash on Delivery (COD)">Cash on Delivery</option>
+            </select>
+          </div>
+
+          <!-- Order Summary Box -->
+          <div class="bg-cream p-4 rounded-2xl space-y-2 text-xs border border-stone-200/80">
+            <div class="flex justify-between text-stone-600"><span>Bag Subtotal</span><span id="bill-subtotal">₹0</span></div>
+            <div class="flex justify-between text-stone-600"><span>Delivery Charges</span><span id="bill-shipping">₹0</span></div>
+            <div class="flex justify-between font-bold text-sm text-charcoal border-t border-stone-200 pt-2"><span>Total Payable</span><span id="bill-total">₹0</span></div>
+          </div>
+
+          <button type="submit" id="place-order-btn" class="w-full bg-charcoal hover:bg-roseGold text-white font-bold text-xs uppercase tracking-[0.18em] py-4 rounded-full shadow-lg transition duration-300">
+            Place Order on WhatsApp →
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. Luxury Footer -->
+  <footer class="bg-charcoal text-stone-400 mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-3 gap-8 text-xs">
+      <div>
+        <span class="font-serif text-2xl font-bold text-white tracking-wider">DRISHMAN & YOSUKA</span>
+        <p class="mt-3 text-stone-400 leading-relaxed">
+          Crafting everyday luxury for your hair. From Mulberry satin scrunchies to Korean aesthetic claw clips and bridal hair adornments.
+        </p>
+      </div>
+      <div>
+        <h4 class="text-white font-semibold uppercase tracking-widest mb-3">Popular Categories</h4>
+        <ul class="space-y-2">
+          <li><button onclick="selectCategory('Scrunchies')" class="hover:text-white transition">Mulberry Satin Scrunchies</button></li>
+          <li><button onclick="selectCategory('Claw Clips')" class="hover:text-white transition">Korean Matte Claw Clips</button></li>
+          <li><button onclick="selectCategory('Headbands')" class="hover:text-white transition">Pearl & Velvet Headbands</button></li>
+          <li><button onclick="selectCategory('Combo Packs')" class="hover:text-white transition">Value Gift Combos</button></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-white font-semibold uppercase tracking-widest mb-3">Customer Care</h4>
+        <p>Pan-India Shipping via Trusted Couriers.</p>
+        <p class="mt-2 text-stone-300">Bulk / Wholesale & Custom Orders Available on WhatsApp.</p>
+      </div>
+    </div>
+    <div class="border-t border-stone-800 py-5 text-center text-[11px] text-stone-500">
+      © <span id="footer-year"></span> Drishman Enterprises. All Rights Reserved.
+    </div>
+  </footer>
+
+  <script>
+    // =========================================================================
+    // 🛠️ STORE CONFIGURATION: अपना Apps Script URL और WhatsApp नंबर यहाँ बदलें
+    // =========================================================================
+    const CONFIG = {
+      BRAND_NAME: "DRISHMAN",
+      // जब आप अपना Google Apps Script URL नीचे डालेंगे, तो वेबसाइट आपकी Sheet के प्रोडक्ट्स दिखाएगी।
+      // अभी इसमें 8 High-End Example Products डले हैं ताकि आप तुरंत डिज़ाइन देख सकें!
+      API_URL: "https://script.google.com/macros/s/AKfycbx9kgOzFmTHM9t9zwwMVDS7iMZIP4m2a0srb3Zp_6fW7sACncgS9tHVZDuzTWQItvus/exec", 
+      WHATSAPP_NO: "919990304777",
+      FREE_SHIPPING_MIN: 499,
+      SHIPPING_CHARGE: 49
+    };
+
+    // =========================================================================
+    // 🌸 PRE-LOADED EXAMPLE HAIR ACCESSORY PRODUCTS (With Sample Images)
+    // =========================================================================
+    const SAMPLE_PRODUCTS = [
+      {
+        sku: "1001",
+        name: "Champagne Rose Mulberry Satin Scrunchies (Pack of 6)",
+        category: "Scrunchies",
+        mrp: 399,
+        price: 179,
+        stock: "In Stock",
+        badge: "Bestseller",
+        images: "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?auto=format&fit=crop&w=700&q=80, https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=700&q=80",
+        description: "Crafted from ultra-smooth high-grade satin fabric that glides effortlessly over your hair without tugging, creasing, or causing split ends. Ideal for thick, curly, and straight hair."
+      },
+      {
+        sku: "1002",
+        name: "Korean Neutral Matte Jumbo Claw Clips (Set of 4)",
+        category: "Claw Clips",
+        mrp: 349,
+        price: 159,
+        stock: "In Stock",
+        badge: "Trending",
+        images: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=700&q=80, https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=700&q=80",
+        description: "Minimalist Korean aesthetic jumbo hair claws with a soft-touch rubberized matte finish. Features a heavy-duty metal spring that holds voluminous hair securely all day."
+      },
+      {
+        sku: "1003",
+        name: "Baroque Freshwater Pearl Padded Velvet Headband",
+        category: "Headbands",
+        mrp: 499,
+        price: 229,
+        stock: "In Stock",
+        badge: "Luxury Edit",
+        images: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=700&q=80",
+        description: "Hand-embellished pearl headband wrapped in plush velvet padding. Designed for pinch-free behind-the-ear comfort during festive occasions, parties, and bridal events."
+      },
+      {
+        sku: "1004",
+        name: "Golden Butterfly & Pearl Korean Hair Clips (Combo of 5)",
+        category: "Hair Clips",
+        mrp: 299,
+        price: 139,
+        stock: "In Stock",
+        badge: "New Arrival",
+        images: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=700&q=80",
+        description: "Tarnish-resistant gold-plated alloy clips adorned with faux pearls and delicate butterfly motifs. Perfect for half-up hairstyles and side pinning."
+      },
+      {
+        sku: "1005",
+        name: "Artisanal Floral Crystal Bridal Tiara & Hair Vine",
+        category: "Bridal & Tiaras",
+        mrp: 799,
+        price: 349,
+        stock: "In Stock",
+        badge: "Bridal",
+        images: "https://images.unsplash.com/photo-1546167889-0b4f5ff9282c?auto=format&fit=crop&w=700&q=80",
+        description: "Flexible silver-toned floral hair vine hand-wired with shimmering Austrian crystals and ivory pearls. Easily shapes around buns, braids, or open curls."
+      },
+      {
+        sku: "1006",
+        name: "Tortoiseshell Interlocking Banana Clips (Set of 2)",
+        category: "Banana Clips",
+        mrp: 249,
+        price: 119,
+        stock: "In Stock",
+        badge: "",
+        images: "https://images.unsplash.com/photo-1583241800698-e8ab01830a07?auto=format&fit=crop&w=700&q=80",
+        description: "Classic French tortoiseshell pattern banana clips that create instant voluminous ponytails without elastic pressure headaches."
+      },
+      {
+        sku: "1007",
+        name: "Vintage Carved Wooden & Pearl Bun Stick Pin",
+        category: "Bun Sticks",
+        mrp: 299,
+        price: 129,
+        stock: "In Stock",
+        badge: "Handcrafted",
+        images: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=700&q=80",
+        description: "Smooth polished bun holder stick with dangling pearl accents. Effortlessly secures sleek chignons and messy buns in seconds."
+      },
+      {
+        sku: "1008",
+        name: "The Ultimate 12-Piece Luxury Hair Accessory Gift Box",
+        category: "Combo Packs",
+        mrp: 899,
+        price: 399,
+        stock: "In Stock",
+        badge: "Value Combo",
+        images: "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?auto=format&fit=crop&w=700&q=80",
+        description: "Includes 4 Mulberry Satin Scrunchies, 2 Matte Korean Claw Clips, 4 Pearl Side Pins, 1 Satin Bow Clip, and 1 Organza Gift Pouch. Our #1 gifting bestseller."
+      }
+    ];
+
+    let allProducts = [];
+    let selectedCategory = "All";
+    let cart = JSON.parse(localStorage.getItem("luxury_store_cart") || "[]");
+
+    document.getElementById("brand-title").innerText = CONFIG.BRAND_NAME;
+    document.getElementById("footer-year").innerText = new Date().getFullYear();
+    document.getElementById("free-ship-banner").innerText = CONFIG.FREE_SHIPPING_MIN;
+
+    // 1. Initialize Store (Loads Sample Products or Live Google Sheet Products)
+    async function initStore() {
+      updateCartUI();
+
+      // If no Apps Script URL is set yet, show the high-end sample products immediately
+      if (!CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_YOUR")) {
+        allProducts = SAMPLE_PRODUCTS;
+        renderCategories();
+        applyFilters();
+        return;
+      }
+
+      // Load from cache first for 0.1s instant load
+      const cached = localStorage.getItem("luxury_products_cache");
+      if (cached) {
+        allProducts = JSON.parse(cached);
+        renderCategories();
+        applyFilters();
+      }
+
+      try {
+        const res = await fetch(CONFIG.API_URL);
+        const json = await res.json();
+        if (json.status === "success" && json.data.length > 0) {
+          allProducts = json.data;
+          localStorage.setItem("luxury_products_cache", JSON.stringify(allProducts));
+          renderCategories();
+          applyFilters();
+        }
+      } catch (err) {
+        console.warn("Using sample catalog as fallback:", err);
+        if (!allProducts.length) {
+          allProducts = SAMPLE_PRODUCTS;
+          renderCategories();
+          applyFilters();
+        }
+      }
+    }
+
+    // 2. Render Category Filter Buttons
+    function renderCategories() {
+      const cats = ["All", ...new Set(allProducts.map(p => p.category).filter(Boolean))];
+      const bar = document.getElementById("category-bar");
+      bar.innerHTML = cats.map(c => {
+        const isActive = c === selectedCategory;
+        const cls = isActive
+          ? "bg-charcoal text-white border-charcoal shadow-xs"
+          : "bg-white text-stone-600 border-stone-200 hover:border-roseGold hover:text-charcoal";
+        return `<button onclick="selectCategory('${c.replace(/'/g, "\\'")}')" class="${cls} border px-5 py-2 rounded-full text-xs font-semibold tracking-wider uppercase whitespace-nowrap transition">${c}</button>`;
+      }).join("");
+    }
+
+    function selectCategory(cat) {
+      selectedCategory = cat;
+      renderCategories();
+      applyFilters();
+    }
+
+    function resetFilters() {
+      selectedCategory = "All";
+      document.getElementById("search-input").value = "";
+      const mobSearch = document.getElementById("search-input-mobile");
+      if (mobSearch) mobSearch.value = "";
+      renderCategories();
+      applyFilters();
+    }
+
+    // 3. Render Products Grid
+    function applyFilters() {
+      const q = document.getElementById("search-input").value.trim().toLowerCase();
+      const filtered = allProducts.filter(p => {
+        const matchCat = selectedCategory === "All" || p.category === selectedCategory;
+        const matchSearch = !q ||
+          String(p.name).toLowerCase().includes(q) ||
+          String(p.sku).toLowerCase().includes(q) ||
+          String(p.category).toLowerCase().includes(q);
+        return matchCat && matchSearch;
+      });
+
+      const grid = document.getElementById("product-grid");
+      const empty = document.getElementById("empty-state");
+
+      if (filtered.length === 0) {
+        grid.innerHTML = "";
+        empty.classList.remove("hidden");
+        return;
+      }
+      empty.classList.add("hidden");
+
+      grid.innerHTML = filtered.map(p => {
+        const imgs = String(p.images || p.image || "").split(",").map(s => s.trim()).filter(Boolean);
+        const coverImg = imgs[0] || "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80";
+        const isOut = String(p.stock).toLowerCase() === "out of stock";
+        const discount = p.mrp > p.price ? Math.round(((p.mrp - p.price) / p.mrp) * 100) : 0;
+
+        return `
+          <div class="fade-in group bg-white rounded-3xl border border-stone-200/70 overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
+            <div>
+              <!-- Image Container -->
+              <div class="relative overflow-hidden bg-stone-100 aspect-[4/5] cursor-pointer" onclick="openProductModal('${p.sku}')">
+                <img src="${coverImg}" alt="${p.name}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                
+                <!-- Badges -->
+                <div class="absolute top-3 left-3 flex flex-col gap-1.5">
+                  ${p.badge ? `<span class="bg-charcoal/90 backdrop-blur-xs text-white text-[10px] uppercase tracking-widest font-bold px-3 py-1 rounded-full">${p.badge}</span>` : ""}
+                  ${discount > 0 ? `<span class="bg-roseGold text-white text-[10px] uppercase tracking-wider font-bold px-2.5 py-0.5 rounded-full w-fit">Save ${discount}%</span>` : ""}
+                </div>
+
+                ${imgs.length > 1 ? `<span class="absolute bottom-3 right-3 bg-white/90 text-charcoal text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xs">📷 ${imgs.length} Photos</span>` : ""}
+                ${isOut ? `<div class="absolute inset-0 bg-white/75 backdrop-blur-[2px] flex items-center justify-center"><span class="bg-charcoal text-white text-xs uppercase tracking-widest font-bold px-4 py-2 rounded-full">Sold Out</span></div>` : ""}
+              </div>
+
+              <!-- Info Container -->
+              <div class="p-4 sm:p-5 cursor-pointer" onclick="openProductModal('${p.sku}')">
+                <div class="flex justify-between items-center text-[10px] uppercase tracking-widest text-stone-400 font-semibold">
+                  <span class="text-roseGold">${p.category || "Accessory"}</span>
+                  <span>SKU #${p.sku}</span>
+                </div>
+                <h3 class="font-serif text-base sm:text-lg font-semibold text-charcoal mt-1.5 line-clamp-2 group-hover:text-roseGold transition">${p.name}</h3>
+              </div>
+            </div>
+
+            <!-- Price & CTA -->
+            <div class="px-4 sm:px-5 pb-5 pt-1">
+              <div class="flex items-baseline gap-2 mb-3">
+                <span class="text-lg sm:text-xl font-bold text-charcoal">₹${p.price}</span>
+                ${p.mrp > p.price ? `<span class="text-xs text-stone-400 line-through">₹${p.mrp}</span>` : ""}
+              </div>
+              ${isOut
+                ? `<button disabled class="w-full bg-stone-100 text-stone-400 text-xs uppercase tracking-widest font-bold py-3 rounded-full cursor-not-allowed">Out of Stock</button>`
+                : `<button onclick="addToCart('${p.sku}')" class="w-full bg-cream hover:bg-charcoal text-charcoal hover:text-white border border-stone-300 hover:border-charcoal text-xs uppercase tracking-widest font-bold py-3 rounded-full transition duration-300">+ Add to Bag</button>`
+              }
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // 4. Quick View Product Modal
+    function openProductModal(sku) {
+      const p = allProducts.find(item => String(item.sku) === String(sku));
+      if (!p) return;
+
+      const imgs = String(p.images || p.image || "").split(",").map(s => s.trim()).filter(Boolean);
+      document.getElementById("modal-main-img").src = imgs[0] || "";
+
+      const thumbs = document.getElementById("modal-thumbnails");
+      thumbs.innerHTML = imgs.length > 1 ? imgs.map(url => `
+        <img src="${url}" onclick="document.getElementById('modal-main-img').src='${url}'" class="w-16 h-16 object-cover rounded-xl border-2 border-white hover:border-roseGold cursor-pointer shadow-xs flex-shrink-0 transition" />
+      `).join("") : "";
+
+      document.getElementById("modal-category").innerText = p.category || "Hair Accessory";
+      document.getElementById("modal-sku").innerText = `SKU: ${p.sku}`;
+      document.getElementById("modal-title").innerText = p.name;
+      document.getElementById("modal-price").innerText = `₹${p.price}`;
+      document.getElementById("modal-mrp").innerText = p.mrp > p.price ? `MRP ₹${p.mrp}` : "";
+      const disc = p.mrp > p.price ? Math.round(((p.mrp - p.price) / p.mrp) * 100) : 0;
+      document.getElementById("modal-discount").innerText = disc > 0 ? `${disc}% OFF` : "";
+      document.getElementById("modal-desc").innerText = p.description || "Handcrafted luxury hair accessory designed for all-day comfort and grip.";
+
+      const addBtn = document.getElementById("modal-add-btn");
+      addBtn.onclick = () => { addToCart(p.sku); closeProductModal(); toggleCart(true); };
+
+      document.getElementById("product-modal").classList.remove("hidden");
+    }
+
+    function closeProductModal() {
+      document.getElementById("product-modal").classList.add("hidden");
+    }
+
+    // 5. Shopping Bag Logic
+    function addToCart(sku) {
+      const p = allProducts.find(item => String(item.sku) === String(sku));
+      if (!p) return;
+      const imgs = String(p.images || p.image || "").split(",").map(s => s.trim()).filter(Boolean);
+      const existing = cart.find(item => String(item.sku) === String(sku));
+
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({
+          sku: p.sku,
+          name: p.name,
+          price: Number(p.price),
+          image: imgs[0] || "",
+          qty: 1
+        });
+      }
+      saveCart();
+      toggleCart(true);
+    }
+
+    function changeQty(sku, delta) {
+      const idx = cart.findIndex(item => String(item.sku) === String(sku));
+      if (idx === -1) return;
+      cart[idx].qty += delta;
+      if (cart[idx].qty <= 0) cart.splice(idx, 1);
+      saveCart();
+    }
+
+    function saveCart() {
+      localStorage.setItem("luxury_store_cart", JSON.stringify(cart));
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      const count = cart.reduce((sum, i) => sum + i.qty, 0);
+      const subtotal = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+      document.getElementById("cart-badge").innerText = count;
+
+      const minFree = CONFIG.FREE_SHIPPING_MIN;
+      const pct = Math.min(100, Math.round((subtotal / minFree) * 100));
+      document.getElementById("shipping-bar").style.width = `${pct}%`;
+      document.getElementById("shipping-msg").innerHTML = subtotal >= minFree
+        ? `✨ Complimentary <b>FREE Delivery</b> unlocked on your bag!`
+        : `Add <b>₹${minFree - subtotal}</b> more to unlock <b>FREE Delivery</b>`;
+
+      const list = document.getElementById("cart-items-list");
+      const form = document.getElementById("checkout-form");
+
+      if (cart.length === 0) {
+        list.innerHTML = `<div class="text-center py-12"><p class="font-serif text-lg text-stone-500">Your shopping bag is empty</p><p class="text-xs text-stone-400 mt-1">Explore our signature scrunchies & claw clips.</p></div>`;
+        form.classList.add("hidden");
+        return;
+      }
+
+      form.classList.remove("hidden");
+      list.innerHTML = cart.map(item => `
+        <div class="flex items-center justify-between gap-3 bg-cream p-3 rounded-2xl border border-stone-200/70">
+          <img src="${item.image}" class="w-14 h-14 rounded-xl object-cover bg-white border flex-shrink-0" />
+          <div class="flex-grow">
+            <h4 class="text-xs font-bold text-charcoal line-clamp-1">${item.name}</h4>
+            <p class="text-[11px] text-stone-500 mt-0.5">SKU #${item.sku} • ₹${item.price}</p>
+          </div>
+          <div class="flex items-center gap-2 bg-white border border-stone-200 rounded-full px-2.5 py-1">
+            <button type="button" onclick="changeQty('${item.sku}', -1)" class="text-charcoal font-bold text-xs px-1">-</button>
+            <span class="text-xs font-bold w-4 text-center">${item.qty}</span>
+            <button type="button" onclick="changeQty('${item.sku}', 1)" class="text-charcoal font-bold text-xs px-1">+</button>
+          </div>
+        </div>
+      `).join("");
+
+      const shipping = subtotal >= minFree ? 0 : CONFIG.SHIPPING_CHARGE;
+      const total = subtotal + shipping;
+
+      document.getElementById("bill-subtotal").innerText = `₹${subtotal}`;
+      document.getElementById("bill-shipping").innerText = shipping === 0 ? "FREE" : `₹${shipping}`;
+      document.getElementById("bill-total").innerText = `₹${total}`;
+    }
+
+    function toggleCart(show) {
+      document.getElementById("cart-drawer").classList.toggle("hidden", !show);
+    }
+
+    // 6. Place Order (Saves to Google Sheet + Sends WhatsApp Order Invoice)
+    async function submitOrder(e) {
+      e.preventDefault();
+      if (cart.length === 0) return;
+
+      const btn = document.getElementById("place-order-btn");
+      btn.disabled = true;
+      btn.innerText = "Processing Order...";
+
+      const orderId = "DY-" + Math.floor(100000 + Math.random() * 900000);
+      const name = document.getElementById("cust-name").value.trim();
+      const phone = document.getElementById("cust-phone").value.trim();
+      const address = document.getElementById("cust-address").value.trim();
+      const pincode = document.getElementById("cust-pincode").value.trim();
+      const paymentMode = document.getElementById("cust-payment").value;
+
+      const subtotal = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+      const shipping = subtotal >= CONFIG.FREE_SHIPPING_MIN ? 0 : CONFIG.SHIPPING_CHARGE;
+      const total = subtotal + shipping;
+      const itemsSummary = cart.map(i => `${i.name} [SKU:${i.sku}] x${i.qty}`).join(" | ");
+
+      // Save to Google Sheet if API_URL is configured
+      if (CONFIG.API_URL && !CONFIG.API_URL.includes("PASTE_YOUR")) {
+        try {
+          await fetch(CONFIG.API_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ orderId, name, phone, address, pincode, paymentMode, itemsSummary, subtotal, shipping, total })
+          });
+        } catch (err) {
+          console.error("Sheet Sync Error:", err);
+        }
+      }
+
+      // Format WhatsApp Luxury Invoice
+      let msg = `✨ *NEW ORDER: ${orderId}* ✨\n`;
+      msg += `━━━━━━━━━━━━━━━━━━━━\n`;
+      cart.forEach((i, idx) => {
+        msg += `${idx + 1}. *${i.name}*\n   SKU: #${i.sku} | Qty: ${i.qty} | ₹${i.price * i.qty}\n`;
+      });
+      msg += `━━━━━━━━━━━━━━━━━━━━\n`;
+      msg += `Bag Subtotal: ₹${subtotal}\n`;
+      msg += `Delivery: ${shipping === 0 ? "FREE" : "₹" + shipping}\n`;
+      msg += `*Total Payable: ₹${total}*\n`;
+      msg += `Payment Preference: *${paymentMode}*\n\n`;
+      msg += `📍 *Shipping Address:*\n`;
+      msg += `${name} (${phone})\n`;
+      msg += `${address} - ${pincode}`;
+
+      cart = [];
+      saveCart();
+      toggleCart(false);
+      btn.disabled = false;
+      btn.innerText = "Place Order on WhatsApp →";
+
+      window.open(`https://wa.me/${CONFIG.WHATSAPP_NO}?text=${encodeURIComponent(msg)}`, "_blank");
+    }
+
+    initStore();
+  </script>
+</body>
+</html>
