@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flipkart Label & Invoice Cropper Pro</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- PDF.js for text coordinate detection & pixel-level auto-whitespace scanning -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- pdf-lib for 100% crisp vector PDF cropping & A4 9-up grid generation -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        fkBlue: '#2874F0',
+                        fkBlueDark: '#1b5ac2',
+                        fkYellow: '#FFE500',
+                        fkOrange: '#FB641B',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .option-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .option-card.active {
+            border-color: #2874F0;
+            background-color: #eff6ff;
+            box-shadow: 0 4px 14px -2px rgba(40, 116, 240, 0.18);
+        }
+        .drop-zone {
+            transition: all 0.25s ease;
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='16' ry='16' stroke='%2394A3B8FF' stroke-width='2' stroke-dasharray='10%2c 10' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        }
+        .drop-zone.dragover {
+            background-color: #eff6ff;
+            transform: scale(1.01);
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='16' ry='16' stroke='%232874F0FF' stroke-width='3' stroke-dasharray='10%2c 10' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-800">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-fkBlue text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-fkYellow text-fkBlue p-2 rounded-xl font-black text-xl flex items-center justify-center shadow-sm">
+                    <i class="ph-bold ph-scissors"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-bold text-lg sm:text-xl tracking-tight">Flipkart Label Cropper</h1>
+                        <span class="bg-fkYellow text-slate-900 text-[11px] font-extrabold px-2 py-0.5 rounded-md uppercase">Fast Browser Mode</span>
+                    </div>
+                    <p class="text-xs text-blue-100 hidden sm:block">Auto Whitespace Crop • Vector Barcode Quality • Thermal & A4 Grids</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center gap-1.5 text-xs bg-blue-700/60 border border-blue-400/30 px-3 py-1.5 rounded-full">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    100% Private (No Server Upload)
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Toast Notification Box -->
+    <div id="toastBox" class="fixed bottom-5 right-5 z-50 hidden max-w-sm bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3 transition-all">
+        <i id="toastIcon" class="ph-fill ph-check-circle text-emerald-400 text-xl shrink-0"></i>
+        <div class="text-sm font-medium" id="toastMessage">Ready</div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- Left Column: Controls & Steps (7 cols on large screens) -->
+            <div class="lg:col-span-7 space-y-6">
+
+                <!-- STEP 1: PDF Upload Section -->
+                <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-7 h-7 rounded-full bg-fkBlue text-white font-bold text-sm flex items-center justify-center">1</span>
+                            <h2 class="font-bold text-base sm:text-lg text-slate-800">Upload Flipkart Label PDF</h2>
+                        </div>
+                        <button id="clearFilesBtn" class="hidden text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+                            <i class="ph-bold ph-trash"></i> Clear All
+                        </button>
+                    </div>
+
+                    <!-- Drag & Drop Zone -->
+                    <div id="dropZone" class="drop-zone rounded-2xl p-6 sm:p-8 text-center cursor-pointer hover:bg-slate-50 relative">
+                        <input type="file" id="pdfInput" accept="application/pdf" multiple class="hidden">
+                        <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-blue-50 text-fkBlue flex items-center justify-center shadow-inner">
+                            <i class="ph-duotone ph-file-pdf text-4xl"></i>
+                        </div>
+                        <p class="font-bold text-slate-700 text-base sm:text-lg">
+                            Drag & Drop Flipkart PDF here
+                        </p>
+                        <p class="text-xs sm:text-sm text-slate-500 mt-1">
+                            Ya click karke apne computer/mobile se PDF file select karein (Multiple PDFs supported)
+                        </p>
+                        <div class="mt-4">
+                            <span class="inline-flex items-center gap-2 bg-fkBlue hover:bg-fkBlueDark text-white font-semibold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-sm transition">
+                                <i class="ph-bold ph-upload-simple"></i> Select PDF Files
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Uploaded Files Summary Pill -->
+                    <div id="fileListContainer" class="hidden mt-4 pt-4 border-t border-slate-100">
+                        <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                                    <i class="ph-fill ph-check-circle text-xl"></i>
+                                </div>
+                                <div class="truncate">
+                                    <p id="fileNamesText" class="font-semibold text-sm text-slate-800 truncate">Godara_Sequenced_Labels.pdf</p>
+                                    <p id="fileStatsText" class="text-xs text-slate-500 font-medium">Calculating pages...</p>
+                                </div>
+                            </div>
+                            <span id="totalPagesBadge" class="bg-blue-100 text-fkBlue font-bold text-xs px-3 py-1 rounded-full shrink-0">
+                                0 Pages
+                            </span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- STEP 2: Invoice Mode Selection (2 Buttons) -->
+                <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+                    <div class="flex items-center gap-2.5 mb-4">
+                        <span class="w-7 h-7 rounded-full bg-fkBlue text-white font-bold text-sm flex items-center justify-center">2</span>
+                        <div>
+                            <h2 class="font-bold text-base sm:text-lg text-slate-800">Select Invoice Option</h2>
+                            <p class="text-xs text-slate-500">Choose karein aapko sirf Label chahiye ya Label ke sath Tax Invoice bhi</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <!-- Button 1: Without Invoice -->
+                        <button type="button" id="btnWithoutInvoice" onclick="setInvoiceMode('without')" class="option-card active text-left p-4 rounded-xl border-2 border-slate-200 flex items-start gap-3.5 relative">
+                            <div class="w-11 h-11 rounded-xl bg-blue-100 text-fkBlue flex items-center justify-center shrink-0 mt-0.5">
+                                <i class="ph-duotone ph-tag text-2xl"></i>
+                            </div>
+                            <div class="pr-4">
+                                <div class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-1.5">
+                                    Without Invoice
+                                </div>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                    Sirf upar wala <strong>Shipping Label</strong> crop hokar aayega (Invoice hat jayega).
+                                </p>
+                            </div>
+                            <div id="checkWithout" class="w-5 h-5 rounded-full bg-fkBlue text-white flex items-center justify-center absolute top-3.5 right-3.5">
+                                <i class="ph-bold ph-check text-xs"></i>
+                            </div>
+                        </button>
+
+                        <!-- Button 2: With Invoice -->
+                        <button type="button" id="btnWithInvoice" onclick="setInvoiceMode('with')" class="option-card text-left p-4 rounded-xl border-2 border-slate-200 flex items-start gap-3.5 relative">
+                            <div class="w-11 h-11 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
+                                <i class="ph-duotone ph-receipt text-2xl"></i>
+                            </div>
+                            <div class="pr-4">
+                                <div class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-1.5">
+                                    With Invoice
+                                </div>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                    <strong>Label + Tax Invoice</strong> dono crop hokar <strong>Label Size me Portrait</strong> ya <strong>A4 par Landscape</strong> aayenge.
+                                </p>
+                            </div>
+                            <div id="checkWith" class="hidden w-5 h-5 rounded-full bg-fkBlue text-white flex items-center justify-center absolute top-3.5 right-3.5">
+                                <i class="ph-bold ph-check text-xs"></i>
+                            </div>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- STEP 3: Paper / Size Format Selection (2 Buttons) -->
+                <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+                    <div class="flex items-center gap-2.5 mb-4">
+                        <span class="w-7 h-7 rounded-full bg-fkBlue text-white font-bold text-sm flex items-center justify-center">3</span>
+                        <div>
+                            <h2 class="font-bold text-base sm:text-lg text-slate-800">Select Paper / Output Size</h2>
+                            <p class="text-xs text-slate-500">Thermal printer ke liye Only Label Size ya A4 sheet par multiple labels select karein</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <!-- Button 1: Only Label Size -->
+                        <button type="button" id="btnOnlyLabelSize" onclick="setPaperMode('label_size')" class="option-card active text-left p-4 rounded-xl border-2 border-slate-200 flex items-start gap-3.5 relative">
+                            <div class="w-11 h-11 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 mt-0.5">
+                                <i class="ph-duotone ph-printer text-2xl"></i>
+                            </div>
+                            <div class="pr-4">
+                                <div class="font-bold text-slate-800 text-sm sm:text-base">
+                                    Only Label Size
+                                </div>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                    Ek page me 1 tight cropped Label (aur With Invoice me agle portrait page par Portrait Invoice).
+                                </p>
+                            </div>
+                            <div id="checkLabelSize" class="w-5 h-5 rounded-full bg-fkBlue text-white flex items-center justify-center absolute top-3.5 right-3.5">
+                                <i class="ph-bold ph-check text-xs"></i>
+                            </div>
+                        </button>
+
+                        <!-- Button 2: On A4 Size Paper -->
+                        <button type="button" id="btnA4Size" onclick="setPaperMode('a4_size')" class="option-card text-left p-4 rounded-xl border-2 border-slate-200 flex items-start gap-3.5 relative">
+                            <div class="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+                                <i class="ph-duotone ph-grid-nine text-2xl"></i>
+                            </div>
+                            <div class="pr-4">
+                                <div class="font-bold text-slate-800 text-sm sm:text-base">
+                                    On A4 Size Paper
+                                </div>
+                                <p id="a4CardDescText" class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                    Without Invoice: <strong>Default 9 Labels/page</strong>. With Invoice: <strong>2, 4, 6, 8, 10 per page (Landscape Invoice)</strong>.
+                                </p>
+                            </div>
+                            <div id="checkA4Size" class="hidden w-5 h-5 rounded-full bg-fkBlue text-white flex items-center justify-center absolute top-3.5 right-3.5">
+                                <i class="ph-bold ph-check text-xs"></i>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Dynamic Sub-Settings for A4 Counts, Portrait Invoice & Margins -->
+                    <div id="extraSettingsPanel" class="mt-4 pt-4 border-t border-slate-100 space-y-3.5 text-xs">
+                        <!-- Active Mode Explanation Banner -->
+                        <div class="bg-blue-50/80 border border-blue-200/80 rounded-xl p-3 flex items-start gap-2.5 text-slate-700">
+                            <i class="ph-fill ph-info text-fkBlue text-lg shrink-0 mt-0.5"></i>
+                            <div id="modeExplanationText" class="leading-relaxed">
+                                <strong>Current Output:</strong> Har page par sirf 1 Shipping Label exact dotted line (+5pt bottom margin) tak crop hokar aayega.
+                            </div>
+                        </div>
+
+                        <!-- A4 Option A: WITHOUT INVOICE -> Default 9 Labels + Manual Input -->
+                        <div id="a4WithoutInvoiceConfig" class="hidden bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                    <span class="font-bold text-slate-800 text-xs sm:text-sm block">Labels Per A4 Page (Without Invoice):</span>
+                                    <span class="text-slate-500 text-[11px]">Default 9 Labels (3×3 Grid) ya manual count set karein</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-slate-600 font-semibold">Manual:</span>
+                                    <input type="number" id="manualA4CountInput" min="1" max="24" value="9" onchange="onManualA4CountChange(this.value)" oninput="onManualA4CountChange(this.value)" class="w-16 bg-white border border-slate-300 rounded-lg px-2 py-1 text-center font-bold text-fkBlue focus:outline-none focus:border-fkBlue">
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                                <button type="button" onclick="setWithoutA4Count(9)" id="btnCount9" class="a4-count-btn px-3 py-1.5 rounded-lg font-bold border border-fkBlue bg-fkBlue text-white shadow-sm transition">
+                                    9 Labels (Default 3×3)
+                                </button>
+                                <button type="button" onclick="setWithoutA4Count(4)" id="btnCount4" class="a4-count-btn px-2.5 py-1.5 rounded-lg font-semibold border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 transition">
+                                    4 (2×2)
+                                </button>
+                                <button type="button" onclick="setWithoutA4Count(6)" id="btnCount6" class="a4-count-btn px-2.5 py-1.5 rounded-lg font-semibold border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 transition">
+                                    6 (2×3)
+                                </button>
+                                <button type="button" onclick="setWithoutA4Count(8)" id="btnCount8" class="a4-count-btn px-2.5 py-1.5 rounded-lg font-semibold border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 transition">
+                                    8 (2×4)
+                                </button>
+                                <button type="button" onclick="setWithoutA4Count(12)" id="btnCount12" class="a4-count-btn px-2.5 py-1.5 rounded-lg font-semibold border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 transition">
+                                    12 (3×4)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- A4 Option B: WITH INVOICE -> Even Numbers (2, 4, 6, 8, 10) with Landscape Invoice Below Label -->
+                        <div id="a4WithInvoiceConfig" class="hidden bg-amber-50/70 border border-amber-200 rounded-xl p-3.5 space-y-2.5">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                    <span class="font-bold text-slate-800 text-xs sm:text-sm block">Even Number Per A4 Page (2, 4, 6, 8, 10):</span>
+                                    <span class="text-slate-600 text-[11px]">Har <strong>Label ke just niche uska Landscape Invoice</strong> sath me aayega</span>
+                                </div>
+                                <span id="evenSelectedBadge" class="bg-fkBlue text-white font-bold px-2.5 py-1 rounded-full text-[11px]">
+                                    4 Per Page
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-5 gap-2 pt-1">
+                                <button type="button" onclick="setWithInvoiceEvenCount(2)" id="btnEven2" class="even-count-btn py-2 px-2 rounded-lg font-bold border border-slate-300 bg-white text-slate-700 hover:bg-blue-50 transition text-center">
+                                    2 <span class="block text-[10px] font-normal opacity-80">Per Page</span>
+                                </button>
+                                <button type="button" onclick="setWithInvoiceEvenCount(4)" id="btnEven4" class="even-count-btn py-2 px-2 rounded-lg font-bold border border-fkBlue bg-fkBlue text-white shadow-sm transition text-center">
+                                    4 <span class="block text-[10px] font-normal opacity-90">Default</span>
+                                </button>
+                                <button type="button" onclick="setWithInvoiceEvenCount(6)" id="btnEven6" class="even-count-btn py-2 px-2 rounded-lg font-bold border border-slate-300 bg-white text-slate-700 hover:bg-blue-50 transition text-center">
+                                    6 <span class="block text-[10px] font-normal opacity-80">Per Page</span>
+                                </button>
+                                <button type="button" onclick="setWithInvoiceEvenCount(8)" id="btnEven8" class="even-count-btn py-2 px-2 rounded-lg font-bold border border-slate-300 bg-white text-slate-700 hover:bg-blue-50 transition text-center">
+                                    8 <span class="block text-[10px] font-normal opacity-80">Per Page</span>
+                                </button>
+                                <button type="button" onclick="setWithInvoiceEvenCount(10)" id="btnEven10" class="even-count-btn py-2 px-2 rounded-lg font-bold border border-slate-300 bg-white text-slate-700 hover:bg-blue-50 transition text-center">
+                                    10 <span class="block text-[10px] font-normal opacity-80">Per Page</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Invoice Portrait Rotation Sub-option (Shown when "With Invoice" & "Only Label Size" is active) -->
+                        <div id="invoiceOrientationRow" class="hidden bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <span class="font-bold text-slate-700 block">Invoice Portrait Rotation (Only Label Size Mode):</span>
+                                <span class="text-slate-500 text-[11px]">Cropped wide invoice ko 90° ghuma kar <strong>Vertical Portrait Mode</strong> me karta hai</span>
+                            </div>
+                            <select id="invoicePortraitStyle" onchange="updateModeExplanation(); if(currentPdfFiles.length) previewFirstPage();" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-bold text-fkBlue focus:outline-none focus:border-fkBlue">
+                                <option value="rotate_90_ccw" selected>Portrait Mode (90° Vertical - Standard)</option>
+                                <option value="rotate_90_cw">Portrait Mode (90° Clockwise Vertical)</option>
+                            </select>
+                        </div>
+
+                        <!-- Fine-tune Label Bottom Margin (+5pt default) & A4 Cut Lines -->
+                        <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+                            <label class="inline-flex items-center gap-2 cursor-pointer select-none text-slate-600 font-medium">
+                                <input type="checkbox" id="chkCutLines" checked class="rounded text-fkBlue focus:ring-fkBlue w-4 h-4">
+                                <span>Show cutting border on A4 Grid</span>
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <span class="text-slate-600 font-semibold">Label Bottom Extra Margin:</span>
+                                <select id="labelBottomMarginSelect" onchange="if(currentPdfFiles.length) previewFirstPage()" class="bg-white border border-slate-300 rounded-lg px-2 py-1 font-bold text-fkBlue">
+                                    <option value="3">+3 pt</option>
+                                    <option value="5" selected>+5 pt (Table Safe)</option>
+                                    <option value="8">+8 pt</option>
+                                    <option value="10">+10 pt</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- STEP 4: Download Action Button & Progress Bar -->
+                <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+                    <!-- Progress Bar Container (Hidden by default) -->
+                    <div id="progressContainer" class="hidden mb-4">
+                        <div class="flex items-center justify-between text-xs font-bold text-slate-700 mb-1.5">
+                            <span id="progressStatusText" class="flex items-center gap-1.5">
+                                <i class="ph-bold ph-spinner animate-spin text-fkBlue"></i>
+                                Scanning & Auto-Cropping Pages...
+                            </span>
+                            <span id="progressPercentText" class="text-fkBlue">0%</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                            <div id="progressBar" class="h-full bg-fkBlue transition-all duration-150 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <button type="button" id="downloadBtn" onclick="processAndDownloadPDF()" class="w-full py-4 px-6 rounded-xl bg-fkOrange hover:bg-[#e85812] active:scale-[0.99] text-white font-extrabold text-base sm:text-lg shadow-lg shadow-orange-500/20 transition flex items-center justify-center gap-3 cursor-pointer">
+                        <i class="ph-bold ph-download-simple text-2xl"></i>
+                        <span>Download Crop Label PDF</span>
+                    </button>
+                    <p class="text-center text-[11px] text-slate-400 mt-2.5">
+                        Auto-detects multi-SKU labels & variable invoice lengths on every page automatically
+                    </p>
+                </section>
+            </div>
+
+            <!-- Right Column: Live Auto-Crop Preview & Output Inspector (5 cols on large screens) -->
+            <div class="lg:col-span-5 space-y-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 sticky top-22">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3.5 mb-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                                <i class="ph-fill ph-eye text-fkBlue"></i>
+                                Smart Auto-Crop Preview
+                            </h3>
+                            <p class="text-xs text-slate-500">Green = Cropped Label | Blue = Cropped Invoice</p>
+                        </div>
+                        <!-- Preview Tabs -->
+                        <div class="flex bg-slate-100 p-1 rounded-lg text-xs font-bold">
+                            <button id="tabSourceBtn" onclick="switchPreviewTab('source')" class="px-2.5 py-1 rounded-md bg-white text-fkBlue shadow-sm transition">
+                                Detected Crop
+                            </button>
+                            <button id="tabOutputBtn" onclick="switchPreviewTab('output')" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition">
+                                Output Result
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Empty State Before Upload -->
+                    <div id="previewEmptyState" class="py-12 px-4 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                        <div class="w-14 h-14 mx-auto mb-3 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center">
+                            <i class="ph-duotone ph-scan text-3xl"></i>
+                        </div>
+                        <p class="font-bold text-slate-700 text-sm">No PDF Uploaded Yet</p>
+                        <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+                            Jaise hi aap Flipkart label PDF upload karenge, yahan automatic whitespace crop boundary dikhayi degi.
+                        </p>
+                    </div>
+
+                    <!-- Source Page Detection Canvas Container -->
+                    <div id="sourcePreviewContainer" class="hidden space-y-3">
+                        <div class="flex flex-wrap items-center justify-between text-xs text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 gap-2">
+                            <span id="previewPageIndicator" class="font-semibold">Page 1 Auto-Crop Preview</span>
+                            <div class="flex items-center gap-3">
+                                <span class="inline-flex items-center gap-1 text-emerald-700 font-semibold">
+                                    <span class="w-2.5 h-2.5 rounded-sm bg-emerald-500 inline-block"></span> Label (+5pt)
+                                </span>
+                                <span class="inline-flex items-center gap-1 text-blue-700 font-semibold">
+                                    <span class="w-2.5 h-2.5 rounded-sm bg-fkBlue inline-block"></span> Invoice
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Live Side-by-Side Comparison Box -->
+                        <div id="portraitLiveComparisonBox" class="bg-blue-50/70 border border-blue-200 rounded-xl p-3">
+                            <div class="flex items-center justify-between text-[11px] font-bold text-slate-700 mb-2">
+                                <span id="comparisonTitleText">Cropped Preview (Label vs Invoice)</span>
+                                <span id="portraitBadgeText" class="bg-fkBlue text-white px-2 py-0.5 rounded text-[10px]">Active Mode</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 items-center">
+                                <div class="bg-white p-2 rounded-lg border border-emerald-300 text-center shadow-sm">
+                                    <span class="block text-[10px] font-bold text-emerald-700 mb-1">1. Cropped Label</span>
+                                    <canvas id="croppedLabelMiniCanvas" class="max-h-44 w-auto mx-auto rounded border border-slate-200"></canvas>
+                                </div>
+                                <div class="bg-white p-2 rounded-lg border border-blue-300 text-center shadow-sm">
+                                    <span id="miniInvoiceTitle" class="block text-[10px] font-bold text-fkBlue mb-1">2. Cropped Invoice</span>
+                                    <canvas id="croppedInvoiceMiniCanvas" class="max-h-44 w-auto mx-auto rounded border border-slate-200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="relative bg-slate-100 rounded-xl overflow-hidden border border-slate-200 flex items-center justify-center p-2 max-h-[380px]">
+                            <canvas id="sourcePreviewCanvas" class="max-w-full max-h-[360px] w-auto h-auto rounded shadow-sm bg-white"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Generated Output Preview Container -->
+                    <div id="outputPreviewContainer" class="hidden">
+                        <div class="flex items-center justify-between text-xs text-slate-600 mb-2 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg">
+                            <span id="outputPageIndicator" class="font-bold text-emerald-800">Cropped Output Page 1</span>
+                            <div class="flex items-center gap-1.5">
+                                <button onclick="changeOutputPreviewPage(-1)" class="px-2 py-0.5 bg-white rounded border border-emerald-300 hover:bg-emerald-100 font-bold">&larr;</button>
+                                <button onclick="changeOutputPreviewPage(1)" class="px-2 py-0.5 bg-white rounded border border-emerald-300 hover:bg-emerald-100 font-bold">&rarr;</button>
+                            </div>
+                        </div>
+                        <div class="relative bg-slate-200/70 rounded-xl overflow-hidden border border-slate-300 flex items-center justify-center p-3 max-h-[520px]">
+                            <canvas id="outputPreviewCanvas" class="max-w-full max-h-[480px] w-auto h-auto rounded shadow-md bg-white"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-12 py-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+            <p>Flipkart Seller Utility • Auto Whitespace Label & Tax Invoice Cropper</p>
+            <p class="font-medium text-slate-600">Works 100% in Browser (Fast & Instant)</p>
+        </div>
+    </footer>
+
+    <!-- Application Logic -->
+    <script>
+        // Configure PDF.js Worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // Application State
+        let currentPdfFiles = [];
+        let invoiceMode = 'without'; // 'without' | 'with'
+        let paperMode = 'label_size'; // 'label_size' | 'a4_size'
+        let withoutInvoiceA4Count = 9; // Default 9 labels per A4 page when Without Invoice
+        let withInvoiceEvenA4Count = 4; // Even number (2, 4, 6, 8, 10) when With Invoice on A4
+        let lastGeneratedPdfBytes = null;
+        let outputPreviewPdfDoc = null;
+        let currentOutputPageNum = 1;
+
+        // DOM Elements
+        const dropZone = document.getElementById('dropZone');
+        const pdfInput = document.getElementById('pdfInput');
+        const fileListContainer = document.getElementById('fileListContainer');
+        const fileNamesText = document.getElementById('fileNamesText');
+        const fileStatsText = document.getElementById('fileStatsText');
+        const totalPagesBadge = document.getElementById('totalPagesBadge');
+        const clearFilesBtn = document.getElementById('clearFilesBtn');
+
+        // Toast Helper
+        function showToast(message, type = 'success') {
+            const box = document.getElementById('toastBox');
+            const icon = document.getElementById('toastIcon');
+            const msg = document.getElementById('toastMessage');
+            msg.textContent = message;
+
+            if (type === 'error') {
+                icon.className = 'ph-fill ph-warning-circle text-red-400 text-xl shrink-0';
+            } else if (type === 'info') {
+                icon.className = 'ph-fill ph-info text-blue-400 text-xl shrink-0';
+            } else {
+                icon.className = 'ph-fill ph-check-circle text-emerald-400 text-xl shrink-0';
+            }
+
+            box.classList.remove('hidden');
+            clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => {
+                box.classList.add('hidden');
+            }, 3500);
+        }
+
+        // Drag and Drop Events
+        dropZone.addEventListener('click', () => pdfInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                handleUploadedFiles(e.dataTransfer.files);
+            }
+        });
+
+        pdfInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                handleUploadedFiles(e.target.files);
+            }
+        });
+
+        clearFilesBtn.addEventListener('click', () => {
+            currentPdfFiles = [];
+            pdfInput.value = '';
+            fileListContainer.classList.add('hidden');
+            clearFilesBtn.classList.add('hidden');
+            document.getElementById('previewEmptyState').classList.remove('hidden');
+            document.getElementById('sourcePreviewContainer').classList.add('hidden');
+            document.getElementById('outputPreviewContainer').classList.add('hidden');
+            showToast('Uploaded files cleared', 'info');
+        });
+
+        // Handle File Upload
+        async function handleUploadedFiles(fileList) {
+            const validFiles = Array.from(fileList).filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
+            if (validFiles.length === 0) {
+                showToast('Please select a valid PDF file!', 'error');
+                return;
+            }
+
+            currentPdfFiles = validFiles;
+            fileListContainer.classList.remove('hidden');
+            clearFilesBtn.classList.remove('hidden');
+
+            const names = validFiles.map(f => f.name).join(', ');
+            fileNamesText.textContent = names;
+            fileStatsText.textContent = `${validFiles.length} PDF file(s) selected • Scanning pages...`;
+
+            let totalPages = 0;
+            try {
+                for (const file of validFiles) {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    totalPages += pdf.numPages;
+                }
+                totalPagesBadge.textContent = `${totalPages} Page${totalPages > 1 ? 's' : ''}`;
+                fileStatsText.textContent = `Ready to crop ${totalPages} Flipkart order page(s) in browser`;
+                showToast(`Loaded ${totalPages} page(s) successfully!`);
+
+                await previewFirstPage();
+            } catch (err) {
+                console.error(err);
+                showToast('Error reading PDF file. Make sure it is not password-protected.', 'error');
+            }
+        }
+
+        // Toggle Option 1: Without Invoice / With Invoice
+        function setInvoiceMode(mode) {
+            invoiceMode = mode;
+            const btnWithout = document.getElementById('btnWithoutInvoice');
+            const btnWith = document.getElementById('btnWithInvoice');
+            const checkWithout = document.getElementById('checkWithout');
+            const checkWith = document.getElementById('checkWith');
+
+            if (mode === 'without') {
+                btnWithout.classList.add('active');
+                btnWith.classList.remove('active');
+                checkWithout.classList.remove('hidden');
+                checkWith.classList.add('hidden');
+            } else {
+                btnWith.classList.add('active');
+                btnWithout.classList.remove('active');
+                checkWith.classList.remove('hidden');
+                checkWithout.classList.add('hidden');
+            }
+            syncSubSettingsVisibility();
+            updateModeExplanation();
+            if (currentPdfFiles.length > 0) {
+                previewFirstPage();
+            }
+        }
+
+        // Toggle Option 2: Only Label Size / On A4 Size Paper
+        function setPaperMode(mode) {
+            paperMode = mode;
+            const btnLabelSize = document.getElementById('btnOnlyLabelSize');
+            const btnA4Size = document.getElementById('btnA4Size');
+            const checkLabelSize = document.getElementById('checkLabelSize');
+            const checkA4Size = document.getElementById('checkA4Size');
+
+            if (mode === 'label_size') {
+                btnLabelSize.classList.add('active');
+                btnA4Size.classList.remove('active');
+                checkLabelSize.classList.remove('hidden');
+                checkA4Size.classList.add('hidden');
+            } else {
+                btnA4Size.classList.add('active');
+                btnLabelSize.classList.remove('active');
+                checkA4Size.classList.remove('hidden');
+                checkLabelSize.classList.add('hidden');
+            }
+            syncSubSettingsVisibility();
+            updateModeExplanation();
+            if (currentPdfFiles.length > 0) {
+                previewFirstPage();
+            }
+        }
+
+        // Show/Hide sub-options based on active mode
+        function syncSubSettingsVisibility() {
+            const invoiceOrientationRow = document.getElementById('invoiceOrientationRow');
+            const a4WithoutConfig = document.getElementById('a4WithoutInvoiceConfig');
+            const a4WithConfig = document.getElementById('a4WithInvoiceConfig');
+
+            if (invoiceMode === 'with' && paperMode === 'label_size') {
+                invoiceOrientationRow.classList.remove('hidden');
+            } else {
+                invoiceOrientationRow.classList.add('hidden');
+            }
+
+            if (paperMode === 'a4_size') {
+                if (invoiceMode === 'without') {
+                    a4WithoutConfig.classList.remove('hidden');
+                    a4WithConfig.classList.add('hidden');
+                } else {
+                    a4WithoutConfig.classList.add('hidden');
+                    a4WithConfig.classList.remove('hidden');
+                }
+            } else {
+                a4WithoutConfig.classList.add('hidden');
+                a4WithConfig.classList.add('hidden');
+            }
+        }
+
+        function setWithoutA4Count(count) {
+            const num = Math.max(1, Math.min(24, parseInt(count, 10) || 9));
+            withoutInvoiceA4Count = num;
+            document.getElementById('manualA4CountInput').value = num;
+
+            [4, 6, 8, 9, 12].forEach(preset => {
+                const btn = document.getElementById(`btnCount${preset}`);
+                if (!btn) return;
+                if (preset === num) {
+                    btn.className = 'a4-count-btn px-3 py-1.5 rounded-lg font-bold border border-fkBlue bg-fkBlue text-white shadow-sm transition';
+                } else {
+                    btn.className = 'a4-count-btn px-2.5 py-1.5 rounded-lg font-semibold border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 transition';
+                }
+            });
+            updateModeExplanation();
+        }
+
+        function onManualA4CountChange(val) {
+            const num = parseInt(val, 10);
+            if (!isNaN(num) && num >= 1 && num <= 24) {
+                setWithoutA4Count(num);
+            }
+        }
+
+        function setWithInvoiceEvenCount(evenNum) {
+            withInvoiceEvenA4Count = evenNum;
+            document.getElementById('evenSelectedBadge').textContent = `${evenNum} Per Page`;
+
+            [2, 4, 6, 8, 10].forEach(n => {
+                const btn = document.getElementById(`btnEven${n}`);
+                if (!btn) return;
+                if (n === evenNum) {
+                    btn.className = 'even-count-btn py-2 px-2 rounded-lg font-bold border border-fkBlue bg-fkBlue text-white shadow-sm transition text-center';
+                } else {
+                    btn.className = 'even-count-btn py-2 px-2 rounded-lg font-bold border border-slate-300 bg-white text-slate-700 hover:bg-blue-50 transition text-center';
+                }
+            });
+            updateModeExplanation();
+        }
+
+        function getGridDimensionsForCount(count) {
+            if (count === 1) return { cols: 1, rows: 1 };
+            if (count === 2) return { cols: 2, rows: 1 };
+            if (count === 3) return { cols: 1, rows: 3 };
+            if (count === 4) return { cols: 2, rows: 2 };
+            if (count === 5 || count === 6) return { cols: 2, rows: 3 };
+            if (count === 7 || count === 8) return { cols: 2, rows: 4 };
+            if (count === 9) return { cols: 3, rows: 3 };
+            if (count === 10) return { cols: 2, rows: 5 };
+            if (count <= 12) return { cols: 3, rows: 4 };
+            if (count <= 16) return { cols: 4, rows: 4 };
+            const cols = Math.ceil(Math.sqrt(count));
+            const rows = Math.ceil(count / cols);
+            return { cols, rows };
+        }
+
+        function updateModeExplanation() {
+            const el = document.getElementById('modeExplanationText');
+            if (invoiceMode === 'without' && paperMode === 'label_size') {
+                el.innerHTML = `<strong>Without Invoice + Only Label Size:</strong> Har page par sirf <strong>1 Shipping Label</strong> exact dotted line (+5pt margin) tak crop hoga.`;
+            } else if (invoiceMode === 'with' && paperMode === 'label_size') {
+                el.innerHTML = `<strong>With Invoice + Only Label Size:</strong> Page 1 par <strong>Portrait Label</strong> aur Page 2 par <strong>Portrait Rotated Invoice</strong> aayega.`;
+            } else if (invoiceMode === 'without' && paperMode === 'a4_size') {
+                const g = getGridDimensionsForCount(withoutInvoiceA4Count);
+                el.innerHTML = `<strong>Without Invoice + A4 Size:</strong> Ek A4 page par <strong>${withoutInvoiceA4Count} Labels (${g.cols}×${g.rows} Grid)</strong> aayenge.`;
+            } else if (invoiceMode === 'with' && paperMode === 'a4_size') {
+                el.innerHTML = `<strong>With Invoice + A4 Size (${withInvoiceEvenA4Count} Orders/Page):</strong> Har order ke liye upar <strong>Portrait Label</strong> aur uske just niche <strong>Landscape Invoice</strong> sath me rahega.`;
+            }
+        }
+
+        function switchPreviewTab(tab) {
+            const tabSourceBtn = document.getElementById('tabSourceBtn');
+            const tabOutputBtn = document.getElementById('tabOutputBtn');
+            const sourceContainer = document.getElementById('sourcePreviewContainer');
+            const outputContainer = document.getElementById('outputPreviewContainer');
+            const emptyState = document.getElementById('previewEmptyState');
+
+            if (currentPdfFiles.length === 0) return;
+            emptyState.classList.add('hidden');
+
+            if (tab === 'source') {
+                tabSourceBtn.className = 'px-2.5 py-1 rounded-md bg-white text-fkBlue shadow-sm transition';
+                tabOutputBtn.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition';
+                sourceContainer.classList.remove('hidden');
+                outputContainer.classList.add('hidden');
+            } else {
+                tabOutputBtn.className = 'px-2.5 py-1 rounded-md bg-white text-fkBlue shadow-sm transition';
+                tabSourceBtn.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition';
+                sourceContainer.classList.add('hidden');
+                outputContainer.classList.remove('hidden');
+            }
+        }
+
+        async function analyzeFlipkartPage(pdfJsPage, labelBottomExtraPt = 5) {
+            const scale = 2.0;
+            const viewport = pdfJsPage.getViewport({ scale });
+            const pageWidthPt = viewport.width / scale;
+            const pageHeightPt = viewport.height / scale;
+
+            const textContent = await pdfJsPage.getTextContent();
+            let taxInvoiceTopPdfY = null;
+            let labelFooterBottomPdfY = null;
+            let sellerRegAddrTopPdfY = null;
+
+            for (const item of textContent.items) {
+                const str = (item.str || '').trim();
+                if (!str) continue;
+                const pdfY = item.transform[5];
+                const itemHeight = Math.abs(item.height || item.transform[3] || 9);
+
+                if (/tax\s*invoice/i.test(str)) {
+                    const topY = pdfY + itemHeight;
+                    if (taxInvoiceTopPdfY === null || topY > taxInvoiceTopPdfY) {
+                        taxInvoiceTopPdfY = topY;
+                    }
+                }
+
+                if (/not\s*for\s*resale|printed\s*at/i.test(str)) {
+                    if (labelFooterBottomPdfY === null || pdfY < labelFooterBottomPdfY) {
+                        labelFooterBottomPdfY = pdfY;
+                    }
+                }
+
+                if (/seller\s*registered\s*address/i.test(str)) {
+                    const topOfSellerLine = pdfY + itemHeight;
+                    if (sellerRegAddrTopPdfY === null || topOfSellerLine > sellerRegAddrTopPdfY) {
+                        sellerRegAddrTopPdfY = topOfSellerLine;
+                    }
+                }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.floor(viewport.width);
+            canvas.height = Math.floor(viewport.height);
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            await pdfJsPage.render({ canvasContext: ctx, viewport }).promise;
+
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            const width = canvas.width;
+            const height = canvas.height;
+
+            let searchStartPdfY = labelFooterBottomPdfY !== null ? labelFooterBottomPdfY + 4 : pageHeightPt * 0.62;
+            let searchEndPdfY = taxInvoiceTopPdfY !== null ? taxInvoiceTopPdfY - 1 : pageHeightPt * 0.48;
+            if (searchStartPdfY < searchEndPdfY) {
+                const tmp = searchStartPdfY;
+                searchStartPdfY = searchEndPdfY + 15;
+                searchEndPdfY = tmp;
+            }
+
+            const searchStartY = Math.max(10, Math.floor((pageHeightPt - searchStartPdfY) * scale));
+            const searchEndY = Math.min(height - 10, Math.ceil((pageHeightPt - searchEndPdfY) * scale));
+
+            let detectedDottedCanvasY = null;
+            let bestTransitions = 0;
+
+            for (let y = searchStartY; y <= searchEndY; y++) {
+                let darkPixels = 0;
+                let transitions = 0;
+                let prevDark = false;
+                for (let x = Math.floor(width * 0.08); x < Math.floor(width * 0.92); x++) {
+                    const idx = (y * width + x) * 4;
+                    const isDark = imgData[idx] < 220 || imgData[idx + 1] < 220 || imgData[idx + 2] < 220;
+                    if (isDark) darkPixels++;
+                    if (isDark !== prevDark) {
+                        transitions++;
+                        prevDark = isDark;
+                    }
+                }
+                if (transitions > 18 && darkPixels > width * 0.12 && transitions > bestTransitions) {
+                    bestTransitions = transitions;
+                    detectedDottedCanvasY = y;
+                }
+            }
+
+            let dottedLinePdfY;
+            if (detectedDottedCanvasY !== null) {
+                dottedLinePdfY = pageHeightPt - (detectedDottedCanvasY / scale);
+            } else if (taxInvoiceTopPdfY !== null && labelFooterBottomPdfY !== null) {
+                dottedLinePdfY = (taxInvoiceTopPdfY + labelFooterBottomPdfY) / 2;
+            } else if (taxInvoiceTopPdfY !== null) {
+                dottedLinePdfY = taxInvoiceTopPdfY + 8;
+            } else {
+                dottedLinePdfY = pageHeightPt * 0.545;
+            }
+
+            const dottedCanvasY = Math.round((pageHeightPt - dottedLinePdfY) * scale);
+
+            // Shipping Label Bounding Box (+5pt bottom margin)
+            let lMinX = width, lMinY = dottedCanvasY, lMaxX = 0, lMaxY = 0;
+            let foundLabel = false;
+            const labelScanEndY = Math.max(10, dottedCanvasY - 3);
+
+            for (let y = 4; y < labelScanEndY; y++) {
+                let rowDark = 0;
+                let rMinX = width, rMaxX = 0;
+                for (let x = 4; x < width - 4; x++) {
+                    const idx = (y * width + x) * 4;
+                    if (imgData[idx] < 240 || imgData[idx + 1] < 240 || imgData[idx + 2] < 240) {
+                        rowDark++;
+                        if (x < rMinX) rMinX = x;
+                        if (x > rMaxX) rMaxX = x;
+                    }
+                }
+                if (rowDark > 2) {
+                    if (y > labelScanEndY - 20 && (rMaxX - rMinX) > width * 0.65) continue;
+                    foundLabel = true;
+                    if (rMinX < lMinX) lMinX = rMinX;
+                    if (rMaxX > lMaxX) lMaxX = rMaxX;
+                    if (y < lMinY) lMinY = y;
+                    if (y > lMaxY) lMaxY = y;
+                }
+            }
+
+            let labelBox = null;
+            if (foundLabel) {
+                const sidePadPt = 4;
+                const topPadPt = 4;
+                const rawLabelBottomPt = pageHeightPt - (lMaxY / scale);
+                const safeBottomPt = Math.max(0, Math.min(rawLabelBottomPt - labelBottomExtraPt, dottedLinePdfY - 1));
+
+                const leftPt = Math.max(0, (lMinX / scale) - sidePadPt);
+                const rightPt = Math.min(pageWidthPt, (lMaxX / scale) + sidePadPt);
+                const topPt = Math.min(pageHeightPt, pageHeightPt - (lMinY / scale) + topPadPt);
+                const bottomPt = safeBottomPt;
+
+                labelBox = {
+                    left: leftPt, bottom: bottomPt, right: rightPt, top: topPt,
+                    width: rightPt - leftPt, height: topPt - bottomPt,
+                    canvasBox: {
+                        x: leftPt * scale, y: (pageHeightPt - topPt) * scale,
+                        w: (rightPt - leftPt) * scale, h: (topPt - bottomPt) * scale
+                    }
+                };
+            }
+
+            // Tax Invoice Bounding Box (Dotted line up to before Seller Registered Address)
+            const invoiceStartCanvasY = Math.max(0, dottedCanvasY + 2);
+            let invoiceEndCanvasY = height - 4;
+
+            if (sellerRegAddrTopPdfY !== null) {
+                const cutoffPdfY = sellerRegAddrTopPdfY + 2;
+                invoiceEndCanvasY = Math.min(height - 4, Math.floor((pageHeightPt - cutoffPdfY) * scale));
+            }
+
+            let iMinX = width, iMinY = invoiceEndCanvasY, iMaxX = 0, iMaxY = invoiceStartCanvasY;
+            let foundInvoice = false;
+
+            for (let y = invoiceStartCanvasY; y < invoiceEndCanvasY; y++) {
+                let rowDark = 0;
+                let rMinX = width, rMaxX = 0;
+                for (let x = 4; x < width - 4; x++) {
+                    const idx = (y * width + x) * 4;
+                    if (imgData[idx] < 240 || imgData[idx + 1] < 240 || imgData[idx + 2] < 240) {
+                        rowDark++;
+                        if (x < rMinX) rMinX = x;
+                        if (x > rMaxX) rMaxX = x;
+                    }
+                }
+                if (rowDark > 2) {
+                    foundInvoice = true;
+                    if (rMinX < iMinX) iMinX = rMinX;
+                    if (rMaxX > iMaxX) iMaxX = rMaxX;
+                    if (y < iMinY) iMinY = y;
+                    if (y > iMaxY) iMaxY = y;
+                }
+            }
+
+            let invoiceBox = null;
+            if (foundInvoice && iMaxY > iMinY) {
+                const sidePadPt = 4;
+                const leftPt = Math.max(0, (iMinX / scale) - sidePadPt);
+                const rightPt = Math.min(pageWidthPt, (iMaxX / scale) + sidePadPt);
+                const topPt = Math.min(pageHeightPt, dottedLinePdfY);
+                const bottomPt = Math.max(0, pageHeightPt - (iMaxY / scale) - 3);
+
+                invoiceBox = {
+                    left: leftPt, bottom: bottomPt, right: rightPt, top: topPt,
+                    width: rightPt - leftPt, height: topPt - bottomPt,
+                    canvasBox: {
+                        x: leftPt * scale, y: (pageHeightPt - topPt) * scale,
+                        w: (rightPt - leftPt) * scale, h: (topPt - bottomPt) * scale
+                    }
+                };
+            }
+
+            return { labelBox, invoiceBox, dottedCanvasY, canvas, scale, pageWidthPt, pageHeightPt };
+        }
+
+        async function previewFirstPage() {
+            if (currentPdfFiles.length === 0) return;
+
+            try {
+                const labelBottomExtraPt = parseFloat(document.getElementById('labelBottomMarginSelect').value || '5');
+                const firstFileBuffer = await currentPdfFiles[0].arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: firstFileBuffer }).promise;
+                const page = await pdf.getPage(1);
+
+                const result = await analyzeFlipkartPage(page, labelBottomExtraPt);
+
+                const previewCanvas = document.getElementById('sourcePreviewCanvas');
+                previewCanvas.width = result.canvas.width;
+                previewCanvas.height = result.canvas.height;
+                const ctx = previewCanvas.getContext('2d');
+
+                ctx.drawImage(result.canvas, 0, 0);
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.12)';
+                ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+
+                if (result.dottedCanvasY) {
+                    ctx.strokeStyle = '#f59e0b';
+                    ctx.setLineDash([6, 4]);
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(0, result.dottedCanvasY);
+                    ctx.lineTo(previewCanvas.width, result.dottedCanvasY);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+
+                if (result.labelBox) {
+                    const b = result.labelBox.canvasBox;
+                    ctx.drawImage(result.canvas, b.x, b.y, b.w, b.h, b.x, b.y, b.w, b.h);
+                    ctx.strokeStyle = '#10b981';
+                    ctx.lineWidth = 4;
+                    ctx.strokeRect(b.x, b.y, b.w, b.h);
+
+                    ctx.fillStyle = '#10b981';
+                    ctx.fillRect(b.x, Math.max(0, b.y - 26), 230, 26);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 14px Inter, sans-serif';
+                    ctx.fillText(`✓ Label (+${labelBottomExtraPt}pt Margin)`, b.x + 8, Math.max(18, b.y - 8));
+                }
+
+                if (result.invoiceBox) {
+                    const b = result.invoiceBox.canvasBox;
+                    if (invoiceMode === 'with') {
+                        ctx.drawImage(result.canvas, b.x, b.y, b.w, b.h, b.x, b.y, b.w, b.h);
+                        ctx.strokeStyle = '#2874F0';
+                        ctx.lineWidth = 4;
+                        ctx.strokeRect(b.x, b.y, b.w, b.h);
+
+                        ctx.fillStyle = '#2874F0';
+                        ctx.fillRect(b.x, Math.max(0, b.y - 26), 290, 26);
+                        ctx.fillStyle = '#ffffff';
+                        ctx.font = 'bold 14px Inter, sans-serif';
+                        ctx.fillText(`✓ Tax Invoice (${paperMode === 'label_size' ? 'Portrait' : 'Landscape'})`, b.x + 8, Math.max(18, b.y - 8));
+                    } else {
+                        ctx.strokeStyle = '#94a3b8';
+                        ctx.setLineDash([8, 6]);
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(b.x, b.y, b.w, b.h);
+                        ctx.setLineDash([]);
+                    }
+                }
+
+                // Mini Previews
+                const labelMini = document.getElementById('croppedLabelMiniCanvas');
+                if (result.labelBox && labelMini) {
+                    const lb = result.labelBox.canvasBox;
+                    labelMini.width = Math.max(1, Math.floor(lb.w));
+                    labelMini.height = Math.max(1, Math.floor(lb.h));
+                    const lCtx = labelMini.getContext('2d');
+                    lCtx.fillStyle = '#ffffff';
+                    lCtx.fillRect(0, 0, labelMini.width, labelMini.height);
+                    lCtx.drawImage(result.canvas, lb.x, lb.y, lb.w, lb.h, 0, 0, labelMini.width, labelMini.height);
+                }
+
+                const invMini = document.getElementById('croppedInvoiceMiniCanvas');
+                const miniInvoiceTitle = document.getElementById('miniInvoiceTitle');
+                const portraitBadgeText = document.getElementById('portraitBadgeText');
+                const portraitStyle = document.getElementById('invoicePortraitStyle').value;
+
+                if (result.invoiceBox && invMini) {
+                    const ib = result.invoiceBox.canvasBox;
+                    const srcW = Math.max(1, Math.floor(ib.w));
+                    const srcH = Math.max(1, Math.floor(ib.h));
+
+                    if (paperMode === 'a4_size') {
+                        // Landscape preview
+                        invMini.width = srcW;
+                        invMini.height = srcH;
+                        const iCtx = invMini.getContext('2d');
+                        iCtx.fillStyle = '#ffffff';
+                        iCtx.fillRect(0, 0, srcW, srcH);
+                        iCtx.drawImage(result.canvas, ib.x, ib.y, ib.w, ib.h, 0, 0, srcW, srcH);
+
+                        if (miniInvoiceTitle) miniInvoiceTitle.textContent = invoiceMode === 'with' ? '2. Invoice (Landscape ✓)' : '2. Excluded';
+                        if (portraitBadgeText) portraitBadgeText.textContent = 'A4: Landscape Invoice';
+                    } else {
+                        // Portrait 90 deg rotation for Only Label Size
+                        invMini.width = srcH;
+                        invMini.height = srcW;
+                        const iCtx = invMini.getContext('2d');
+                        iCtx.fillStyle = '#ffffff';
+                        iCtx.fillRect(0, 0, invMini.width, invMini.height);
+                        iCtx.save();
+                        if (portraitStyle === 'rotate_90_ccw') {
+                            iCtx.translate(0, invMini.height);
+                            iCtx.rotate(-Math.PI / 2);
+                        } else {
+                            iCtx.translate(invMini.width, 0);
+                            iCtx.rotate(Math.PI / 2);
+                        }
+                        iCtx.drawImage(result.canvas, ib.x, ib.y, ib.w, ib.h, 0, 0, srcW, srcH);
+                        iCtx.restore();
+
+                        if (miniInvoiceTitle) miniInvoiceTitle.textContent = invoiceMode === 'with' ? '2. Invoice (Portrait ✓)' : '2. Excluded';
+                        if (portraitBadgeText) portraitBadgeText.textContent = 'Label Size: Portrait Invoice';
+                    }
+                    invMini.style.opacity = invoiceMode === 'with' ? '1' : '0.35';
+                }
+
+                switchPreviewTab('source');
+            } catch (e) {
+                console.error('Preview error:', e);
+            }
+        }
+
+        async function processAndDownloadPDF() {
+            if (currentPdfFiles.length === 0) {
+                showToast('Pahle Flipkart Label PDF upload karein!', 'error');
+                pdfInput.click();
+                return;
+            }
+
+            const downloadBtn = document.getElementById('downloadBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressStatusText = document.getElementById('progressStatusText');
+            const progressPercentText = document.getElementById('progressPercentText');
+
+            downloadBtn.disabled = true;
+            downloadBtn.classList.add('opacity-60', 'cursor-not-allowed');
+            progressContainer.classList.remove('hidden');
+            progressBar.style.width = '2%';
+            progressPercentText.textContent = '2%';
+
+            try {
+                const { PDFDocument, rgb, degrees } = PDFLib;
+                const outPdf = await PDFDocument.create();
+                const labelBottomExtraPt = parseFloat(document.getElementById('labelBottomMarginSelect').value || '5');
+                const portraitStyle = document.getElementById('invoicePortraitStyle').value;
+                const showCutLines = document.getElementById('chkCutLines').checked;
+
+                let totalPagesToProcess = 0;
+                const loadedDocs = [];
+                for (const file of currentPdfFiles) {
+                    const bytes = await file.arrayBuffer();
+                    const pdfJsDoc = await pdfjsLib.getDocument({ data: bytes.slice(0) }).promise;
+                    const pdfLibDoc = await PDFDocument.load(bytes);
+                    loadedDocs.push({ pdfJsDoc, pdfLibDoc, name: file.name });
+                    totalPagesToProcess += pdfJsDoc.numPages;
+                }
+
+                const croppedOrders = [];
+                let processedPages = 0;
+
+                for (const docObj of loadedDocs) {
+                    const numPages = docObj.pdfJsDoc.numPages;
+                    const srcPages = docObj.pdfLibDoc.getPages();
+
+                    for (let p = 1; p <= numPages; p++) {
+                        processedPages++;
+                        const pct = Math.round((processedPages / totalPagesToProcess) * 75);
+                        progressBar.style.width = `${pct}%`;
+                        progressPercentText.textContent = `${pct}%`;
+                        progressStatusText.innerHTML = `<i class="ph-bold ph-spinner animate-spin text-fkBlue"></i> Auto-Cropping Page ${processedPages} of ${totalPagesToProcess}...`;
+
+                        const pdfJsPage = await docObj.pdfJsDoc.getPage(p);
+                        const srcPage = srcPages[p - 1];
+                        const analysis = await analyzeFlipkartPage(pdfJsPage, labelBottomExtraPt);
+
+                        let labelObj = null;
+                        let invoiceObj = null;
+
+                        if (analysis.labelBox && analysis.labelBox.width > 20 && analysis.labelBox.height > 20) {
+                            const lb = analysis.labelBox;
+                            const embeddedLabel = await outPdf.embedPage(srcPage, {
+                                left: lb.left, bottom: lb.bottom, right: lb.right, top: lb.top
+                            });
+                            labelObj = { embedded: embeddedLabel, width: lb.width, height: lb.height };
+                        }
+
+                        if (invoiceMode === 'with' && analysis.invoiceBox && analysis.invoiceBox.width > 20 && analysis.invoiceBox.height > 20) {
+                            const ib = analysis.invoiceBox;
+                            const embeddedInvoice = await outPdf.embedPage(srcPage, {
+                                left: ib.left, bottom: ib.bottom, right: ib.right, top: ib.top
+                            });
+                            invoiceObj = { embedded: embeddedInvoice, width: ib.width, height: ib.height };
+                        }
+
+                        if (labelObj || invoiceObj) {
+                            croppedOrders.push({ label: labelObj, invoice: invoiceObj });
+                        }
+                    }
+                }
+
+                progressStatusText.innerHTML = `<i class="ph-bold ph-spinner animate-spin text-fkBlue"></i> Building Final Cropped PDF...`;
+                progressBar.style.width = '90%';
+                progressPercentText.textContent = '90%';
+
+                // =========================================================================
+                // 1. ONLY LABEL SIZE MODE
+                // =========================================================================
+                if (paperMode === 'label_size') {
+                    for (const order of croppedOrders) {
+                        let refW = 196, refH = 345;
+                        if (order.label) {
+                            refW = order.label.width;
+                            refH = order.label.height;
+                            const page = outPdf.addPage([order.label.width, order.label.height]);
+                            page.drawPage(order.label.embedded, {
+                                x: 0, y: 0, width: order.label.width, height: order.label.height
+                            });
+                        }
+
+                        if (invoiceMode === 'with' && order.invoice) {
+                            const inv = order.invoice;
+                            const pad = 6;
+                            const pageW = refW;
+                            const pageH = refH;
+                            const page = outPdf.addPage([pageW, pageH]);
+
+                            const rotatedW = inv.height;
+                            const rotatedH = inv.width;
+                            const availW = pageW - pad * 2;
+                            const availH = pageH - pad * 2;
+                            const scale = Math.min(availW / rotatedW, availH / rotatedH);
+
+                            const drawUnrotW = inv.width * scale;
+                            const drawUnrotH = inv.height * scale;
+                            const boxX = (pageW - drawUnrotH) / 2;
+                            const boxY = (pageH - drawUnrotW) / 2;
+
+                            if (portraitStyle === 'rotate_90_ccw') {
+                                page.drawPage(inv.embedded, {
+                                    x: boxX + drawUnrotH, y: boxY, width: drawUnrotW, height: drawUnrotH, rotate: degrees(90)
+                                });
+                            } else {
+                                page.drawPage(inv.embedded, {
+                                    x: boxX, y: boxY + drawUnrotW, width: drawUnrotW, height: drawUnrotH, rotate: degrees(-90)
+                                });
+                            }
+                        }
+                    }
+                }
+                // =========================================================================
+                // 2A. ON A4 SIZE PAPER + WITHOUT INVOICE
+                // =========================================================================
+                else if (paperMode === 'a4_size' && invoiceMode === 'without') {
+                    const A4_WIDTH = 595.28;
+                    const A4_HEIGHT = 841.89;
+                    const itemsPerPage = Math.max(1, withoutInvoiceA4Count);
+                    const { cols: COLS, rows: ROWS } = getGridDimensionsForCount(itemsPerPage);
+
+                    const outerMargin = 12;
+                    const cellGap = 6;
+                    const usableW = A4_WIDTH - (outerMargin * 2) - (cellGap * (COLS - 1));
+                    const usableH = A4_HEIGHT - (outerMargin * 2) - (cellGap * (ROWS - 1));
+                    const cellW = usableW / COLS;
+                    const cellH = usableH / ROWS;
+
+                    const onlyLabels = croppedOrders.filter(o => o.label).map(o => o.label);
+
+                    for (let i = 0; i < onlyLabels.length; i += itemsPerPage) {
+                        const a4Page = outPdf.addPage([A4_WIDTH, A4_HEIGHT]);
+                        const batch = onlyLabels.slice(i, i + itemsPerPage);
+
+                        for (let slot = 0; slot < batch.length; slot++) {
+                            const item = batch[slot];
+                            const col = slot % COLS;
+                            const row = Math.floor(slot / COLS);
+
+                            const cellX = outerMargin + col * (cellW + cellGap);
+                            const cellY = A4_HEIGHT - outerMargin - ((row + 1) * cellH) - (row * cellGap);
+
+                            if (showCutLines) {
+                                a4Page.drawRectangle({
+                                    x: cellX, y: cellY, width: cellW, height: cellH,
+                                    borderColor: rgb(0.82, 0.85, 0.89), borderWidth: 0.6
+                                });
+                            }
+
+                            const innerPad = 3;
+                            const maxW = cellW - innerPad * 2;
+                            const maxH = cellH - innerPad * 2;
+                            const scale = Math.min(maxW / item.width, maxH / item.height);
+                            const drawW = item.width * scale;
+                            const drawH = item.height * scale;
+                            const drawX = cellX + (cellW - drawW) / 2;
+                            const drawY = cellY + (cellH - drawH) / 2;
+
+                            a4Page.drawPage(item.embedded, {
+                                x: drawX, y: drawY, width: drawW, height: drawH
+                            });
+                        }
+                    }
+                }
+                // =========================================================================
+                // 2B. ON A4 SIZE PAPER + WITH INVOICE (Landscape Invoice just below Label)
+                // =========================================================================
+                else if (paperMode === 'a4_size' && invoiceMode === 'with') {
+                    const A4_WIDTH = 595.28;
+                    const A4_HEIGHT = 841.89;
+                    const ordersPerPage = withInvoiceEvenA4Count;
+                    const COLS = 2;
+                    const ROWS = Math.max(1, Math.ceil(ordersPerPage / 2));
+
+                    const outerMargin = 12;
+                    const cellGap = 6;
+                    const usableW = A4_WIDTH - (outerMargin * 2) - (cellGap * (COLS - 1));
+                    const usableH = A4_HEIGHT - (outerMargin * 2) - (cellGap * (ROWS - 1));
+                    const cellW = usableW / COLS;
+                    const cellH = usableH / ROWS;
+
+                    for (let i = 0; i < croppedOrders.length; i += ordersPerPage) {
+                        const a4Page = outPdf.addPage([A4_WIDTH, A4_HEIGHT]);
+                        const batch = croppedOrders.slice(i, i + ordersPerPage);
+
+                        for (let slot = 0; slot < batch.length; slot++) {
+                            const order = batch[slot];
+                            const col = slot % COLS;
+                            const row = Math.floor(slot / COLS);
+
+                            const cellX = outerMargin + col * (cellW + cellGap);
+                            const cellY = A4_HEIGHT - outerMargin - ((row + 1) * cellH) - (row * cellGap);
+
+                            if (showCutLines) {
+                                a4Page.drawRectangle({
+                                    x: cellX, y: cellY, width: cellW, height: cellH,
+                                    borderColor: rgb(0.75, 0.80, 0.86), borderWidth: 0.7
+                                });
+                            }
+
+                            const pad = 3;
+                            const innerX = cellX + pad;
+                            const innerY = cellY + pad;
+                            const innerW = cellW - pad * 2;
+                            const innerH = cellH - pad * 2;
+
+                            if (order.label && order.invoice) {
+                                const gapBetween = 4;
+                                const labelZoneH = (innerH - gapBetween) * 0.68;
+                                const invZoneH = (innerH - gapBetween) * 0.32;
+
+                                const invZoneY = innerY;
+                                const labelZoneY = innerY + invZoneH + gapBetween;
+
+                                // 1. Label on Top
+                                const lScale = Math.min(innerW / order.label.width, labelZoneH / order.label.height);
+                                const lDrawW = order.label.width * lScale;
+                                const lDrawH = order.label.height * lScale;
+                                const lDrawX = innerX + (innerW - lDrawW) / 2;
+                                const lDrawY = labelZoneY + (labelZoneH - lDrawH) / 2;
+
+                                a4Page.drawPage(order.label.embedded, {
+                                    x: lDrawX, y: lDrawY, width: lDrawW, height: lDrawH
+                                });
+
+                                if (showCutLines) {
+                                    a4Page.drawLine({
+                                        start: { x: cellX + 4, y: invZoneY + invZoneH + (gapBetween / 2) },
+                                        end: { x: cellX + cellW - 4, y: invZoneY + invZoneH + (gapBetween / 2) },
+                                        thickness: 0.4, color: rgb(0.82, 0.85, 0.90)
+                                    });
+                                }
+
+                                // 2. Landscape Invoice Below
+                                const iScale = Math.min(innerW / order.invoice.width, invZoneH / order.invoice.height);
+                                const iDrawW = order.invoice.width * iScale;
+                                const iDrawH = order.invoice.height * iScale;
+                                const iDrawX = innerX + (innerW - iDrawW) / 2;
+                                const iDrawY = invZoneY + (invZoneH - iDrawH) / 2;
+
+                                a4Page.drawPage(order.invoice.embedded, {
+                                    x: iDrawX, y: iDrawY, width: iDrawW, height: iDrawH
+                                });
+                            } else if (order.label) {
+                                const lScale = Math.min(innerW / order.label.width, innerH / order.label.height);
+                                const lDrawW = order.label.width * lScale;
+                                const lDrawH = order.label.height * lScale;
+                                a4Page.drawPage(order.label.embedded, {
+                                    x: innerX + (innerW - lDrawW) / 2, y: innerY + (innerH - lDrawH) / 2,
+                                    width: lDrawW, height: lDrawH
+                                });
+                            }
+                        }
+                    }
+                }
+
+                lastGeneratedPdfBytes = await outPdf.save();
+
+                progressBar.style.width = '100%';
+                progressPercentText.textContent = '100%';
+                progressStatusText.innerHTML = `<i class="ph-fill ph-check-circle text-emerald-600"></i> Done! Downloading Cropped PDF...`;
+
+                const blob = new Blob([lastGeneratedPdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const countInfo = paperMode === 'a4_size'
+                    ? (invoiceMode === 'with' ? `A4_${withInvoiceEvenA4Count}_WithInvoice` : `A4_${withoutInvoiceA4Count}_Labels`)
+                    : 'Thermal_Portrait';
+                const baseName = currentPdfFiles[0].name.replace(/\.pdf$/i, '');
+                a.href = url;
+                a.download = `Flipkart_Cropped_${countInfo}_${baseName}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 10000);
+
+                showToast('Cropped PDF downloaded successfully!');
+                await loadGeneratedOutputPreview(lastGeneratedPdfBytes);
+
+            } catch (err) {
+                console.error('Error processing PDF:', err);
+                showToast('Error while cropping PDF. Please check the file.', 'error');
+            } finally {
+                downloadBtn.disabled = false;
+                downloadBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                }, 2500);
+            }
+        }
+
+        async function loadGeneratedOutputPreview(pdfBytes) {
+            try {
+                outputPreviewPdfDoc = await pdfjsLib.getDocument({ data: pdfBytes.slice(0) }).promise;
+                currentOutputPageNum = 1;
+                await renderOutputPreviewPage(currentOutputPageNum);
+                switchPreviewTab('output');
+            } catch (e) {
+                console.error('Output preview error:', e);
+            }
+        }
+
+        async function renderOutputPreviewPage(pageNum) {
+            if (!outputPreviewPdfDoc) return;
+            const page = await outputPreviewPdfDoc.getPage(pageNum);
+            const scale = 1.6;
+            const viewport = page.getViewport({ scale });
+
+            const canvas = document.getElementById('outputPreviewCanvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            await page.render({ canvasContext: ctx, viewport }).promise;
+
+            document.getElementById('outputPageIndicator').textContent =
+                `Cropped Output: Page ${pageNum} of ${outputPreviewPdfDoc.numPages}`;
+        }
+
+        function changeOutputPreviewPage(delta) {
+            if (!outputPreviewPdfDoc) return;
+            const next = currentOutputPageNum + delta;
+            if (next >= 1 && next <= outputPreviewPdfDoc.numPages) {
+                currentOutputPageNum = next;
+                renderOutputPreviewPage(currentOutputPageNum);
+            }
+        }
+    </script>
+</body>
+</html>
